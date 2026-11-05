@@ -13,6 +13,9 @@
  * Public API contract. Signatures are fixed; implementations replace the stubs.
  */
 import type { RuleId, Severity } from '@stillwatch/schema';
+import { runScenarios } from './runner';
+import { SCENARIOS } from './scenarios';
+import { renderScorecardText } from './scorecard';
 
 export type ScenarioInfo = {
   id: string;
@@ -54,14 +57,19 @@ export type LabOptions = {
 };
 
 export function listScenarios(): ScenarioInfo[] {
-  throw new Error('not implemented: listScenarios');
+  return SCENARIOS.map(({ id, title, category, description }) => ({
+    id,
+    title,
+    category,
+    description,
+  }));
 }
 
-export function runLab(_options?: LabOptions): Promise<Scorecard> {
-  return Promise.reject(new Error('not implemented: runLab'));
+export function runLab(options?: LabOptions): Promise<Scorecard> {
+  return runScenarios([...SCENARIOS], options);
 }
 
 /** Plain-text scorecard for the terminal. */
-export function renderScorecard(_card: Scorecard, _options?: { color?: boolean }): string {
-  throw new Error('not implemented: renderScorecard');
+export function renderScorecard(card: Scorecard, options?: { color?: boolean }): string {
+  return renderScorecardText(card, options);
 }

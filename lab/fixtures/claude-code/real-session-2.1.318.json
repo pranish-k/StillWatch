@@ -529,11 +529,7 @@
           "path": "/Users/dev/projects/demo"
         },
         "tool_response": {
-          "filenames": [
-            "CLAUDE.md",
-            "notes/plan.md",
-            "README.md"
-          ],
+          "filenames": ["CLAUDE.md", "notes/plan.md", "README.md"],
           "durationMs": 18,
           "numFiles": 3,
           "truncated": false,

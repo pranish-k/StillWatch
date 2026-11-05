@@ -1,0 +1,126 @@
+# Setting up Stillwatch
+
+Stillwatch is pre-alpha and not yet published to npm, so install it from source.
+
+## Requirements
+
+- macOS or Linux
+- Node.js 22.13 or newer
+- Claude Code 2.1.139 or newer
+- git
+- pnpm 12, to build from source
+
+## Install from source
+
+```sh
+git clone https://github.com/pranish-k/StillWatch.git
+cd StillWatch
+pnpm install
+pnpm build
+node apps/cli/dist/stillwatch.mjs install
+```
+
+Install records the paths of the Node binary and the built CLI, so keep the clone where it is, or run install again after moving it.
+The examples below write `stillwatch` for `node apps/cli/dist/stillwatch.mjs`; an alias makes that literal:
+
+```sh
+alias stillwatch="node $PWD/apps/cli/dist/stillwatch.mjs"
+```
+
+Start a new Claude Code session after installing.
+In interactive sessions, Claude Code runs hooks only in folders you have trusted.
+
+## What install changes
+
+- It creates `~/.stillwatch` (or `$STILLWATCH_HOME`) with the config, the capture hook script, and the spool.
+- It checks your Claude Code version, and refuses versions older than 2.1.139 unless you pass `--force`.
+- It backs up your Claude Code settings file into `~/.stillwatch/backups/`.
+- It adds one hook entry per event to the settings file, and records what it added so uninstall can remove exactly that.
+
+By default it edits the user settings file, `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json`), so every project is covered.
+Each entry is its own matcher group, appended after yours, and runs the hook script without a shell:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh",
+            "args": ["/Users/you/.stillwatch/bin/hook.sh", "claude-code", "PreToolUse"],
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+`SessionStart`, `UserPromptSubmit`, `Stop`, `StopFailure`, and `SessionEnd` run synchronously instead of in the background.
+`SessionStart` and `UserPromptSubmit` also pass `--ensure-collector`, which starts the collector when it is not running.
+The [detailed spec](planning/detailed-spec.md#event-capture-and-detection) lists every event and why some are never hooked.
+
+Use `--dry-run` to see the change without writing it.
+
+## Install scopes
+
+| Scope | Settings file | Covers |
+| --- | --- | --- |
+| `user` (default) | `~/.claude/settings.json` | Every project |
+| `project` | `<project>/.claude/settings.json` | One project, shared through the repository |
+| `local` | `<project>/.claude/settings.local.json` | One project, on this computer only |
+
+For `project` and `local`, pass the project with `--project-dir <dir>`.
+
+## Check that it works
+
+```sh
+stillwatch status
+```
+
+Status reports whether the hooks are installed, whether the hook script is in place, whether the collector is running, how many events wait in the spool, database counts, and Claude Code compatibility.
+Add `--json` for scripts.
+
+## Review sessions
+
+```sh
+stillwatch open
+```
+
+This starts the collector if needed and opens the dashboard at `http://127.0.0.1:7391` with a single-use login link that is valid for 120 seconds.
+Pass `--no-browser` to skip opening a browser.
+
+| Command | What it does |
+| --- | --- |
+| `stillwatch sessions [--json] [--limit <n>]` | Lists sessions, riskiest first |
+| `stillwatch report <id\|latest> [--out <file>]` | Writes a redacted Markdown report |
+| `stillwatch start`, `stillwatch stop` | Starts or stops the background collector |
+| `stillwatch verify [--session <id>]` | Checks the event hash chains for edits |
+| `stillwatch delete-data (--session <id> \| --older-than <days> \| --all) [--yes]` | Deletes recorded data |
+| `stillwatch lab [--scenario <id>] [--json] [--keep]` | Runs the attack lab in temporary directories and prints a scorecard |
+
+## Uninstall
+
+```sh
+stillwatch stop
+stillwatch uninstall
+```
+
+Uninstall removes exactly the hook entries Stillwatch added and leaves the rest of your settings as they were.
+Add `--purge` to also delete `~/.stillwatch`, including all recorded data.
+Use the same `--scope` and `--project-dir` you installed with.
+
+## Troubleshooting
+
+| Problem | What to do |
+| --- | --- |
+| The collector is not running | Run `stillwatch start`, then check `~/.stillwatch/logs/collector.log` |
+| Status lists missing hook events | Run `stillwatch install` again, then start a new Claude Code session |
+| You switched Node versions or moved the clone | Run `stillwatch install` again so the hook can start the collector; events are still captured meanwhile, because the hook itself does not need Node |
+| The port is in use | Change `port` in `~/.stillwatch/config.json`, then run `stillwatch stop` and `stillwatch start` |
+| A report says the start state is unknown | The collector was not running when the session began; it starts automatically for later sessions |
+
+See [privacy](security/privacy.md) for what is stored and [limits](security/limits.md) for what Stillwatch cannot see.

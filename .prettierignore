@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+pnpm-lock.yaml
+# Markdown is hand-formatted: one sentence per line, tables kept as written.
+*.md
+lab/fixtures/

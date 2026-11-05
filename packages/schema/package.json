@@ -1,0 +1,13 @@
+{
+  "name": "@stillwatch/schema",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared types, constants, and pure helpers. Runs in Node and the browser.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

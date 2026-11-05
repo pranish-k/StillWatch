@@ -1,0 +1,19 @@
+{
+  "name": "@stillwatch/lab",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Attack lab scenarios and scorecard.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@stillwatch/schema": "workspace:*",
+    "@stillwatch/collector": "workspace:*",
+    "@stillwatch/adapter-claude": "workspace:*",
+    "@stillwatch/storage": "workspace:*"
+  }
+}

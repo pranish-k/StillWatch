@@ -1,0 +1,1105 @@
+{
+  "description": "Real Claude Code hook payloads captured with claude -p (Claude Code 2.1.318, model haiku) in a throwaway repo. Paths are rewritten to /Users/dev/projects/demo. The .env.test value is a fake secret.",
+  "claudeCodeVersion": "2.1.318",
+  "capturedAt": "2026-11-04",
+  "records": [
+    {
+      "offsetMs": 0,
+      "hookArg": "InstructionsLoaded",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "hook_event_name": "InstructionsLoaded",
+        "file_path": "/Users/dev/projects/demo/CLAUDE.md",
+        "memory_type": "Project",
+        "load_reason": "session_start"
+      }
+    },
+    {
+      "offsetMs": 0.004,
+      "hookArg": "InstructionsLoaded",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "hook_event_name": "InstructionsLoaded",
+        "file_path": "/Users/dev/.claude/CLAUDE.md",
+        "memory_type": "User",
+        "load_reason": "session_start"
+      }
+    },
+    {
+      "offsetMs": 116.204,
+      "hookArg": "SessionStart",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "hook_event_name": "SessionStart",
+        "source": "startup"
+      }
+    },
+    {
+      "offsetMs": 958.029,
+      "hookArg": "UserPromptSubmit",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "hook_event_name": "UserPromptSubmit",
+        "prompt": "You are helping test a logging tool in this throwaway repository. Do these steps in order, using the named tools, and keep all work inside this repository: 1) Use the Read tool on README.md. 2) Use the Write tool to create notes/plan.md containing a three-line plan. 3) Use the Edit tool to append the line 'Edited by agent.' to README.md. 4) Use Bash to run: git status --short 5) Use Bash to run: cat .env.test 6) Use Bash to run: ls /definitely-missing-dir (this is expected to fail). 7) Use the Glob tool to find **/*.md and the Grep tool to search for 'Demo'. 8) Use Bash to run: cd src && pwd 9) Use the Agent tool with subagent_type Explore to list the files in src and report back. 10) Use Bash to run: echo done > notes/done.txt. Then reply with one short sentence summarizing what you did."
+      }
+    },
+    {
+      "offsetMs": 4068.621,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Read",
+        "tool_input": {
+          "file_path": "/Users/dev/projects/demo/README.md"
+        },
+        "tool_use_id": "toolu_01PVZEVXjQaMZM1MoGJbUREo"
+      }
+    },
+    {
+      "offsetMs": 4089.026,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Read",
+        "tool_input": {
+          "file_path": "/Users/dev/projects/demo/README.md"
+        },
+        "tool_response": {
+          "type": "text",
+          "file": {
+            "filePath": "/Users/dev/projects/demo/README.md",
+            "content": "# Demo project\n\nA tiny repo used to capture hook payloads.\n",
+            "numLines": 4,
+            "startLine": 1,
+            "totalLines": 4
+          }
+        },
+        "tool_use_id": "toolu_01PVZEVXjQaMZM1MoGJbUREo",
+        "duration_ms": 2
+      }
+    },
+    {
+      "offsetMs": 4100.304,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Read",
+            "tool_input": {
+              "file_path": "/Users/dev/projects/demo/README.md"
+            },
+            "tool_use_id": "toolu_01PVZEVXjQaMZM1MoGJbUREo",
+            "tool_response": "1\t# Demo project\n2\t\n3\tA tiny repo used to capture hook payloads.\n4\t"
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 6372.001,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Write",
+        "tool_input": {
+          "file_path": "/Users/dev/projects/demo/notes/plan.md",
+          "content": "Step 1: Read README.md to confirm the project context.\nStep 2: Append a test line to README.md with the Edit tool.\nStep 3: Verify the repo state with git status and finish the logging test.\n"
+        },
+        "tool_use_id": "toolu_01AjQPJhDc1BaLj7b9WQVZd7"
+      }
+    },
+    {
+      "offsetMs": 6391.524,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Write",
+        "tool_input": {
+          "file_path": "/Users/dev/projects/demo/notes/plan.md",
+          "content": "Step 1: Read README.md to confirm the project context.\nStep 2: Append a test line to README.md with the Edit tool.\nStep 3: Verify the repo state with git status and finish the logging test.\n"
+        },
+        "tool_response": {
+          "type": "create",
+          "filePath": "/Users/dev/projects/demo/notes/plan.md",
+          "content": "Step 1: Read README.md to confirm the project context.\nStep 2: Append a test line to README.md with the Edit tool.\nStep 3: Verify the repo state with git status and finish the logging test.\n",
+          "structuredPatch": [],
+          "originalFile": null,
+          "userModified": false
+        },
+        "tool_use_id": "toolu_01AjQPJhDc1BaLj7b9WQVZd7",
+        "duration_ms": 3
+      }
+    },
+    {
+      "offsetMs": 6403.484,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Write",
+            "tool_input": {
+              "file_path": "/Users/dev/projects/demo/notes/plan.md",
+              "content": "Step 1: Read README.md to confirm the project context.\nStep 2: Append a test line to README.md with the Edit tool.\nStep 3: Verify the repo state with git status and finish the logging test.\n"
+            },
+            "tool_use_id": "toolu_01AjQPJhDc1BaLj7b9WQVZd7",
+            "tool_response": "File created successfully at: /Users/dev/projects/demo/notes/plan.md (file state is current in your context — no need to Read it back)"
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 8620.249,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Edit",
+        "tool_input": {
+          "file_path": "/Users/dev/projects/demo/README.md",
+          "old_string": "A tiny repo used to capture hook payloads.\n",
+          "new_string": "A tiny repo used to capture hook payloads.\nEdited by agent.\n",
+          "replace_all": false
+        },
+        "tool_use_id": "toolu_01NvjmzYVzxLtX1JifVYLtzH"
+      }
+    },
+    {
+      "offsetMs": 8638,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Edit",
+        "tool_input": {
+          "file_path": "/Users/dev/projects/demo/README.md",
+          "old_string": "A tiny repo used to capture hook payloads.\n",
+          "new_string": "A tiny repo used to capture hook payloads.\nEdited by agent.\n",
+          "replace_all": false
+        },
+        "tool_response": {
+          "filePath": "/Users/dev/projects/demo/README.md",
+          "oldString": "A tiny repo used to capture hook payloads.\n",
+          "newString": "A tiny repo used to capture hook payloads.\nEdited by agent.\n",
+          "originalFile": "# Demo project\n\nA tiny repo used to capture hook payloads.\n",
+          "structuredPatch": [
+            {
+              "oldStart": 1,
+              "oldLines": 3,
+              "newStart": 1,
+              "newLines": 4,
+              "lines": [
+                " # Demo project",
+                " ",
+                " A tiny repo used to capture hook payloads.",
+                "+Edited by agent."
+              ]
+            }
+          ],
+          "userModified": false,
+          "replaceAll": false
+        },
+        "tool_use_id": "toolu_01NvjmzYVzxLtX1JifVYLtzH",
+        "duration_ms": 2
+      }
+    },
+    {
+      "offsetMs": 8649.874,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Edit",
+            "tool_input": {
+              "replace_all": false,
+              "file_path": "/Users/dev/projects/demo/README.md",
+              "old_string": "A tiny repo used to capture hook payloads.\n",
+              "new_string": "A tiny repo used to capture hook payloads.\nEdited by agent.\n"
+            },
+            "tool_use_id": "toolu_01NvjmzYVzxLtX1JifVYLtzH",
+            "tool_response": "The file /Users/dev/projects/demo/README.md has been updated successfully. (file state is current in your context — no need to Read it back)"
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 10713.156,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "git status --short",
+          "description": "Show short git status of the repo"
+        },
+        "tool_use_id": "toolu_01HfN8aBzv7Jjs59SQscm32e"
+      }
+    },
+    {
+      "offsetMs": 11279.887,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "git status --short",
+          "description": "Show short git status of the repo"
+        },
+        "tool_response": {
+          "stdout": " M README.md\n?? notes/",
+          "stderr": "",
+          "interrupted": false,
+          "isImage": false,
+          "noOutputExpected": false
+        },
+        "tool_use_id": "toolu_01HfN8aBzv7Jjs59SQscm32e",
+        "duration_ms": 553
+      }
+    },
+    {
+      "offsetMs": 11526.559,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "cat .env.test",
+          "description": "Print contents of .env.test"
+        },
+        "tool_use_id": "toolu_01Bx1z6rJSpmdgitpn7qNyws"
+      }
+    },
+    {
+      "offsetMs": 11559.247,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "cat .env.test",
+          "description": "Print contents of .env.test"
+        },
+        "tool_response": {
+          "stdout": "API_KEY=sk-test-FAKEFAKEFAKE1234567890",
+          "stderr": "",
+          "interrupted": false,
+          "isImage": false,
+          "noOutputExpected": false
+        },
+        "tool_use_id": "toolu_01Bx1z6rJSpmdgitpn7qNyws",
+        "duration_ms": 20
+      }
+    },
+    {
+      "offsetMs": 11869.968,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "ls /definitely-missing-dir",
+          "description": "List a missing directory (expected to fail)"
+        },
+        "tool_use_id": "toolu_01T6YFUW32bEp9pa5gkvWS7X"
+      }
+    },
+    {
+      "offsetMs": 11885.649,
+      "hookArg": "PermissionRequest",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PermissionRequest",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "ls /definitely-missing-dir",
+          "description": "List a missing directory (expected to fail)"
+        },
+        "permission_suggestions": []
+      }
+    },
+    {
+      "offsetMs": 11898.395,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Bash",
+            "tool_input": {
+              "command": "git status --short",
+              "description": "Show short git status of the repo"
+            },
+            "tool_use_id": "toolu_01HfN8aBzv7Jjs59SQscm32e",
+            "tool_response": " M README.md\n?? notes/"
+          },
+          {
+            "tool_name": "Bash",
+            "tool_input": {
+              "command": "cat .env.test",
+              "description": "Print contents of .env.test"
+            },
+            "tool_use_id": "toolu_01Bx1z6rJSpmdgitpn7qNyws",
+            "tool_response": "API_KEY=sk-test-FAKEFAKEFAKE1234567890"
+          },
+          {
+            "tool_name": "Bash",
+            "tool_input": {
+              "command": "ls /definitely-missing-dir",
+              "description": "List a missing directory (expected to fail)"
+            },
+            "tool_use_id": "toolu_01T6YFUW32bEp9pa5gkvWS7X",
+            "tool_response": "ls in '/definitely-missing-dir' was blocked. For security, Claude Code may only list files in the allowed working directories for this session: '/Users/dev/projects/demo'."
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 14141.056,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Glob",
+        "tool_input": {
+          "pattern": "**/*.md",
+          "path": "/Users/dev/projects/demo"
+        },
+        "tool_use_id": "toolu_01S3qbiES1tiNQXkKBAYqjPh"
+      }
+    },
+    {
+      "offsetMs": 14173.946,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Glob",
+        "tool_input": {
+          "pattern": "**/*.md",
+          "path": "/Users/dev/projects/demo"
+        },
+        "tool_response": {
+          "filenames": [
+            "CLAUDE.md",
+            "notes/plan.md",
+            "README.md"
+          ],
+          "durationMs": 18,
+          "numFiles": 3,
+          "truncated": false,
+          "totalMatches": 3,
+          "countIsComplete": true
+        },
+        "tool_use_id": "toolu_01S3qbiES1tiNQXkKBAYqjPh",
+        "duration_ms": 18
+      }
+    },
+    {
+      "offsetMs": 14961.697,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Grep",
+        "tool_input": {
+          "pattern": "Demo",
+          "path": "/Users/dev/projects/demo",
+          "output_mode": "content",
+          "-n": true
+        },
+        "tool_use_id": "toolu_016ANL9gZiyCAfbsSsysa2eJ"
+      }
+    },
+    {
+      "offsetMs": 14993.966,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Grep",
+        "tool_input": {
+          "pattern": "Demo",
+          "path": "/Users/dev/projects/demo",
+          "output_mode": "content",
+          "-n": true
+        },
+        "tool_response": {
+          "mode": "content",
+          "numFiles": 0,
+          "filenames": [],
+          "content": "README.md:1:# Demo project",
+          "numLines": 1,
+          "totalLines": 1
+        },
+        "tool_use_id": "toolu_016ANL9gZiyCAfbsSsysa2eJ",
+        "duration_ms": 17
+      }
+    },
+    {
+      "offsetMs": 15004.323,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Glob",
+            "tool_input": {
+              "pattern": "**/*.md",
+              "path": "/Users/dev/projects/demo"
+            },
+            "tool_use_id": "toolu_01S3qbiES1tiNQXkKBAYqjPh",
+            "tool_response": "CLAUDE.md\nnotes/plan.md\nREADME.md"
+          },
+          {
+            "tool_name": "Grep",
+            "tool_input": {
+              "pattern": "Demo",
+              "path": "/Users/dev/projects/demo",
+              "output_mode": "content",
+              "-n": true
+            },
+            "tool_use_id": "toolu_016ANL9gZiyCAfbsSsysa2eJ",
+            "tool_response": "README.md:1:# Demo project"
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 17351.798,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "cd src && pwd",
+          "description": "Change into src directory and print working path"
+        },
+        "tool_use_id": "toolu_01UxkzQUcFntQ6JPtE87CLmS"
+      }
+    },
+    {
+      "offsetMs": 17383.704,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "cd src && pwd",
+          "description": "Change into src directory and print working path"
+        },
+        "tool_response": {
+          "stdout": "/Users/dev/projects/demo/src",
+          "stderr": "",
+          "interrupted": false,
+          "isImage": false,
+          "noOutputExpected": false
+        },
+        "tool_use_id": "toolu_01UxkzQUcFntQ6JPtE87CLmS",
+        "duration_ms": 17
+      }
+    },
+    {
+      "offsetMs": 17383.772,
+      "hookArg": "CwdChanged",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "hook_event_name": "CwdChanged",
+        "old_cwd": "/Users/dev/projects/demo",
+        "new_cwd": "/Users/dev/projects/demo/src"
+      }
+    },
+    {
+      "offsetMs": 17393.013,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Bash",
+            "tool_input": {
+              "command": "cd src && pwd",
+              "description": "Change into src directory and print working path"
+            },
+            "tool_use_id": "toolu_01UxkzQUcFntQ6JPtE87CLmS",
+            "tool_response": "/Users/dev/projects/demo/src"
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 20172.229,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Agent",
+        "tool_input": {
+          "description": "List files in src",
+          "prompt": "In the directory /Users/dev/projects/demo/src, list the files it contains (recursively) and report them back. Keep the report brief. Do not modify anything.",
+          "subagent_type": "Explore",
+          "effort": "low"
+        },
+        "tool_use_id": "toolu_01H1one1vrcjdJy6dY8Fduk9"
+      }
+    },
+    {
+      "offsetMs": 20209.633,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Agent",
+        "tool_input": {
+          "description": "List files in src",
+          "prompt": "In the directory /Users/dev/projects/demo/src, list the files it contains (recursively) and report them back. Keep the report brief. Do not modify anything.",
+          "subagent_type": "Explore",
+          "effort": "low"
+        },
+        "tool_response": {
+          "isAsync": true,
+          "status": "async_launched",
+          "agentId": "a94f2784d3bf5c75c",
+          "description": "List files in src",
+          "resolvedModel": "claude-haiku-5-5",
+          "prompt": "In the directory /Users/dev/projects/demo/src, list the files it contains (recursively) and report them back. Keep the report brief. Do not modify anything.",
+          "outputFile": "/private/tmp/claude-501/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1/tasks/a94f2784d3bf5c75c.output",
+          "canReadOutputFile": true,
+          "canContinueAgent": true
+        },
+        "tool_use_id": "toolu_01H1one1vrcjdJy6dY8Fduk9",
+        "duration_ms": 11
+      }
+    },
+    {
+      "offsetMs": 20209.843,
+      "hookArg": "SubagentStart",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "agent_id": "a94f2784d3bf5c75c",
+        "agent_type": "Explore",
+        "hook_event_name": "SubagentStart"
+      }
+    },
+    {
+      "offsetMs": 20228.703,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Agent",
+            "tool_input": {
+              "description": "List files in src",
+              "subagent_type": "Explore",
+              "prompt": "In the directory /Users/dev/projects/demo/src, list the files it contains (recursively) and report them back. Keep the report brief. Do not modify anything.",
+              "effort": "low"
+            },
+            "tool_use_id": "toolu_01H1one1vrcjdJy6dY8Fduk9",
+            "tool_response": [
+              {
+                "type": "text",
+                "text": "Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)\nagentId: a94f2784d3bf5c75c (internal ID - do not mention to user. Use SendMessage with to: 'a94f2784d3bf5c75c', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /private/tmp/claude-501/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1/tasks/a94f2784d3bf5c75c.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 21761.764,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "agent_id": "a94f2784d3bf5c75c",
+        "agent_type": "Explore",
+        "effort": {
+          "level": "low"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "find /Users/dev/projects/demo/src -print",
+          "description": "Recursively list all files and directories under src"
+        },
+        "tool_use_id": "toolu_01PNYmUUg3GNA3k3WJvmzmpy"
+      }
+    },
+    {
+      "offsetMs": 21845.007,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "agent_id": "a94f2784d3bf5c75c",
+        "agent_type": "Explore",
+        "effort": {
+          "level": "low"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "find /Users/dev/projects/demo/src -print",
+          "description": "Recursively list all files and directories under src"
+        },
+        "tool_response": {
+          "stdout": "/Users/dev/projects/demo/src\n/Users/dev/projects/demo/src/math.js",
+          "stderr": "",
+          "interrupted": false,
+          "isImage": false,
+          "noOutputExpected": false
+        },
+        "tool_use_id": "toolu_01PNYmUUg3GNA3k3WJvmzmpy",
+        "duration_ms": 31
+      }
+    },
+    {
+      "offsetMs": 21884.545,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "agent_id": "a94f2784d3bf5c75c",
+        "agent_type": "Explore",
+        "effort": {
+          "level": "low"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Bash",
+            "tool_input": {
+              "command": "find /Users/dev/projects/demo/src -print",
+              "description": "Recursively list all files and directories under src"
+            },
+            "tool_use_id": "toolu_01PNYmUUg3GNA3k3WJvmzmpy",
+            "tool_response": "/Users/dev/projects/demo/src\n/Users/dev/projects/demo/src/math.js"
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 22390.139,
+      "hookArg": "Stop",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "Stop",
+        "stop_hook_active": false,
+        "last_assistant_message": "The Explore agent is still running on step 9 (listing `src`). I'll run step 10 and send the summary once it reports back.",
+        "background_tasks": [
+          {
+            "id": "a94f2784d3bf5c75c",
+            "type": "subagent",
+            "status": "running",
+            "description": "List files in src",
+            "agent_type": "Explore"
+          }
+        ],
+        "session_crons": []
+      }
+    },
+    {
+      "offsetMs": 24100.695,
+      "hookArg": "SubagentStop",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "3f8a2b90-08fa-489f-87d6-7b5607f1099d",
+        "permission_mode": "acceptEdits",
+        "agent_id": "a94f2784d3bf5c75c",
+        "agent_type": "Explore",
+        "effort": {
+          "level": "low"
+        },
+        "hook_event_name": "SubagentStop",
+        "stop_hook_active": false,
+        "agent_transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1/subagents/agent-a94f2784d3bf5c75c.jsonl",
+        "last_assistant_message": "The `src` directory contains one file, and no subdirectories:\n\n- `/Users/dev/projects/demo/src/math.js`\n\nNothing was modified.",
+        "background_tasks": [
+          {
+            "id": "a94f2784d3bf5c75c",
+            "type": "subagent",
+            "status": "running",
+            "description": "List files in src",
+            "agent_type": "Explore"
+          }
+        ],
+        "session_crons": []
+      }
+    },
+    {
+      "offsetMs": 24154.473,
+      "hookArg": "UserPromptSubmit",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "287ce575-0884-4d86-a6fb-3fb5433edc73",
+        "permission_mode": "acceptEdits",
+        "hook_event_name": "UserPromptSubmit",
+        "prompt": "<task-notification>\n<task-id>a94f2784d3bf5c75c</task-id>\n<tool-use-id>toolu_01H1one1vrcjdJy6dY8Fduk9</tool-use-id>\n<output-file>/private/tmp/claude-501/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1/tasks/a94f2784d3bf5c75c.output</output-file>\n<status>completed</status>\n<summary>Agent \"List files in src\" finished</summary>\n<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>\n<result>The `src` directory contains one file, and no subdirectories:\n\n- `/Users/dev/projects/demo/src/math.js`\n\nNothing was modified.</result>\n<usage><subagent_tokens>21739</subagent_tokens><tool_uses>1</tool_uses><duration_ms>3944</duration_ms></usage>\n</task-notification>"
+      }
+    },
+    {
+      "offsetMs": 26508.558,
+      "hookArg": "PreToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo/src",
+        "prompt_id": "287ce575-0884-4d86-a6fb-3fb5433edc73",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "cd /Users/dev/projects/demo && echo done > notes/done.txt",
+          "description": "Write done marker file into notes directory"
+        },
+        "tool_use_id": "toolu_0133XjPmv4Hz4u3MmEoCzGWS"
+      }
+    },
+    {
+      "offsetMs": 26549.738,
+      "hookArg": "CwdChanged",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "287ce575-0884-4d86-a6fb-3fb5433edc73",
+        "hook_event_name": "CwdChanged",
+        "old_cwd": "/Users/dev/projects/demo/src",
+        "new_cwd": "/Users/dev/projects/demo"
+      }
+    },
+    {
+      "offsetMs": 26549.775,
+      "hookArg": "PostToolUse",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "287ce575-0884-4d86-a6fb-3fb5433edc73",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "cd /Users/dev/projects/demo && echo done > notes/done.txt",
+          "description": "Write done marker file into notes directory"
+        },
+        "tool_response": {
+          "stdout": "",
+          "stderr": "",
+          "interrupted": false,
+          "isImage": false,
+          "noOutputExpected": false
+        },
+        "tool_use_id": "toolu_0133XjPmv4Hz4u3MmEoCzGWS",
+        "duration_ms": 19
+      }
+    },
+    {
+      "offsetMs": 26559.881,
+      "hookArg": "PostToolBatch",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "287ce575-0884-4d86-a6fb-3fb5433edc73",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PostToolBatch",
+        "tool_calls": [
+          {
+            "tool_name": "Bash",
+            "tool_input": {
+              "command": "cd /Users/dev/projects/demo && echo done > notes/done.txt",
+              "description": "Write done marker file into notes directory"
+            },
+            "tool_use_id": "toolu_0133XjPmv4Hz4u3MmEoCzGWS",
+            "tool_response": "(Bash completed with no output)"
+          }
+        ]
+      }
+    },
+    {
+      "offsetMs": 28682.673,
+      "hookArg": "Stop",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "287ce575-0884-4d86-a6fb-3fb5433edc73",
+        "permission_mode": "acceptEdits",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "Stop",
+        "stop_hook_active": false,
+        "last_assistant_message": "I read the README, wrote `notes/plan.md`, appended \"Edited by agent.\" to it, ran the git, glob, grep and `src` steps, and wrote `notes/done.txt`. The missing-directory `ls` was blocked as expected, and `src` holds only `math.js`.",
+        "background_tasks": [],
+        "session_crons": []
+      }
+    },
+    {
+      "offsetMs": 28703.797,
+      "hookArg": "SessionEnd",
+      "payload": {
+        "session_id": "9cdb7fa7-8a39-41b9-815c-f79cfcc335c1",
+        "transcript_path": "/Users/dev/.claude/projects/-Users-dev-projects-demo/9cdb7fa7-8a39-41b9-815c-f79cfcc335c1.jsonl",
+        "cwd": "/Users/dev/projects/demo",
+        "prompt_id": "287ce575-0884-4d86-a6fb-3fb5433edc73",
+        "hook_event_name": "SessionEnd",
+        "reason": "other"
+      }
+    }
+  ]
+}

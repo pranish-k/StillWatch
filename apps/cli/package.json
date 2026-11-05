@@ -1,0 +1,44 @@
+{
+  "name": "stillwatch",
+  "version": "0.0.1",
+  "description": "A local flight recorder for coding agents: see what your agent did, what it touched, and what it left behind.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "bin": {
+    "stillwatch": "./dist/stillwatch.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "keywords": [
+    "claude-code",
+    "agents",
+    "security",
+    "audit",
+    "hooks",
+    "observability"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pranish-k/StillWatch.git"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@stillwatch/schema": "workspace:*",
+    "@stillwatch/collector": "workspace:*",
+    "@stillwatch/adapter-claude": "workspace:*",
+    "@stillwatch/storage": "workspace:*",
+    "@stillwatch/reports": "workspace:*",
+    "@stillwatch/lab": "workspace:*"
+  }
+}

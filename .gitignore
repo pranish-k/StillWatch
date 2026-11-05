@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vite/
+.eslintcache
+
+# Local state and logs
+*.log
+.DS_Store
+.stillwatch/
+.stillwatch-*/
+tmp/
+
+# Never commit real environment files
+.env
+.env.*
+!.env.example
+
+# Agent worktrees
+.claude/worktrees/

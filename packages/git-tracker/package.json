@@ -1,0 +1,16 @@
+{
+  "name": "@stillwatch/git-tracker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Repository and persistence-surface snapshots and diffs.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@stillwatch/schema": "workspace:*"
+  }
+}

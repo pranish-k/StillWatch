@@ -1,0 +1,23 @@
+{
+  "name": "@stillwatch/collector",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Collector service: spool import, analysis, snapshots, local API.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@stillwatch/schema": "workspace:*",
+    "@stillwatch/redaction": "workspace:*",
+    "@stillwatch/adapter-claude": "workspace:*",
+    "@stillwatch/storage": "workspace:*",
+    "@stillwatch/git-tracker": "workspace:*",
+    "@stillwatch/facts": "workspace:*",
+    "@stillwatch/rules": "workspace:*",
+    "@stillwatch/reports": "workspace:*"
+  }
+}

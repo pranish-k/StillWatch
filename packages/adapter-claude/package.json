@@ -1,0 +1,16 @@
+{
+  "name": "@stillwatch/adapter-claude",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Claude Code hook spec, payload normalization, and transcript reading.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@stillwatch/schema": "workspace:*"
+  }
+}

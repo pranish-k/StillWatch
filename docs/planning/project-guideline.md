@@ -4,30 +4,36 @@ Nov 3, 2026
 
 ## Purpose
 
-This guideline is the plan to agree on before writing product code. Phase 1 ends with a private alpha: a local app that records Claude Code sessions, shows what changed, and flags what could outlive the session.
+This guideline is the plan to agree on before writing product code.
+Phase 1 ends with a private alpha: a local app that records Claude Code sessions, shows what changed, and flags what could outlive the session.
 
 **The Phase 1 promise:** after any agent session, a developer can see what happened, what sensitive files were touched, and what remains.
 
 The work is organized into three documents:
 
-- **Guideline:** scope, stages, working rules, quality gates, and risks
-- **Architecture decisions:** the technical choices and why they were made
-- **Phase 1 task plan:** the task-level work for each stage
+- **Guideline:** scope, stages, working rules, quality gates, and risks (this document)
+- **[Architecture decisions](../decisions/README.md):** the technical choices and why they were made
+- **[Phase 1 task plan](phase-1-task-plan.md):** the task-level work for each stage
 
-"Stillwatch" and the `stillwatch` command are working names. Check for naming conflicts before publishing.
+They build on the [project brief](project-brief.md) and the [detailed spec](detailed-spec.md), and [the architecture document](../architecture.md) describes the system as built.
 
-The plan assumes one developer working about 15 hours a week on macOS or Linux. Durations are planning estimates, so use the stage order and gates as the real plan.
+"Stillwatch" and the `stillwatch` command are working names.
+Check for naming conflicts before publishing.
+
+The plan assumes one developer working about 15 hours a week on macOS or Linux.
+Durations are planning estimates, so use the stage order and gates as the real plan.
 
 ## Scope of work
 
-Phase 1 covers Claude Code on one computer, with observation only. Anything that would make the app block actions, send data to the cloud, or manage several people waits until after the alpha.
+Phase 1 covers Claude Code on one computer, with observation only.
+Anything that would make the app block actions, send data to the cloud, or manage several people waits until after the alpha.
 
 **In scope**
 
 - Capture of Claude Code sessions, tool calls, subagents, and configuration changes
 - A durable local spool, so events survive when the app isn't running
 - Secret redaction before events are stored
-- A local SQLite database and a dashboard on `localhost`
+- A local SQLite database and a dashboard on `127.0.0.1`
 - Session timelines and event details
 - A snapshot of the repository at session start, plus a final file-change view
 - Detection for secrets, persistence, safety bypasses, and interrupted sessions
@@ -50,7 +56,8 @@ Phase 1 covers Claude Code on one computer, with observation only. Anything that
 | Windows support | Adds platform work before the idea is proven | Later |
 | Browser agents | Uses a different capture path | Later |
 
-Phase 1 can still list domains that appear in tool calls, such as a `curl` command or web fetch. It must label this as partial evidence, not a full network log.
+Phase 1 can still list domains that appear in tool calls, such as a `curl` command or web fetch.
+It must label this as partial evidence, not a full network log.
 
 **Deliverables**
 
@@ -75,11 +82,12 @@ Phase 1 can still list domains that appear in tool calls, such as a `curl` comma
 - Agent sessions are started by one person.
 - Testing uses fake secrets until redaction has passed its gate.
 
-This plan differs from the brief in one way: it combines the brief's recorder and persistence phases, adds hardening, and moves AI summaries to Phase 2.
+This plan differs from the brief in three ways: it combines the brief's recorder and persistence phases, adds a hardening stage, and moves AI summaries to Phase 2.
 
 ## Development stages
 
-Build the evidence pipeline first, then detection, then reporting. Each stage must pass its gate before the next begins, because a detection rule is only as reliable as the data beneath it.
+Build the evidence pipeline first, then detection, then reporting.
+Each stage must pass its gate before the next begins, because a detection rule is only as reliable as the data beneath it.
 
 | Stage | Timing | Work | Gate |
 | --- | --- | --- | --- |
@@ -96,7 +104,8 @@ Stage 4 is the key stage, because detecting what remains is what separates this 
 
 ## What each stage looks like
 
-Every stage ends with something you can run and show. Use these descriptions to judge whether a stage is truly finished.
+Every stage ends with something you can run and show.
+Use these descriptions to judge whether a stage is truly finished.
 
 | Stage | What exists at the end | Demo | Exit gate |
 | --- | --- | --- | --- |
@@ -124,23 +133,28 @@ These rules keep a solo project reviewable, especially if AI agents help write t
 ```text
 stillwatch/
   apps/
-    cli/            install, status, removal, and hook handler
-    collector/      background import and analysis service
-    web/            local dashboard
+    cli/              the stillwatch command and the published npm package
+    collector/        capture hook script, spool import, snapshots, analysis, local API
+    web/              local dashboard
   packages/
-    schema/         shared event and finding types
-    adapter-claude/ Claude Code event mapping
-    redaction/      secret removal
-    storage/        SQLite access and migrations
-    git-tracker/    snapshots and diffs
-    rules/          detection rules
-    reports/        report generation
+    schema/           shared event, finding, report, and API types
+    adapter-claude/   Claude Code hook spec, event mapping, transcripts
+    installer/        Claude Code settings editing and install checks
+    redaction/        secret removal and data minimization
+    storage/          SQLite access and migrations
+    git-tracker/      snapshots and diffs
+    facts/            event facts, shell parsing, sensitive-path catalog
+    rules/            detection rules and session analysis
+    reports/          report generation
   lab/
-    fixtures/       saved and synthetic sessions
-    scenarios/      planted attack tests
+    src/              attack lab runner and scenarios
+    fixtures/         saved and synthetic sessions
   docs/
-    decisions/      architecture decision records
-    security/       threat model and limits
+    planning/         brief, spec, guideline, and task plan
+    decisions/        architecture decision records
+    security/         threat model, limits, and privacy
+  .github/
+    workflows/        continuous integration
 ```
 
 **Development rules**
@@ -172,7 +186,8 @@ stillwatch/
 
 ## Quality and release gates
 
-The app's value depends on trust, so accuracy and privacy gates matter more than feature count. These targets are starting points to adjust after real use.
+The app's value depends on trust, so accuracy and privacy gates matter more than feature count.
+These targets are starting points to adjust after real use.
 
 | Area | Requirement | How to check |
 | --- | --- | --- |
@@ -192,15 +207,18 @@ The app's value depends on trust, so accuracy and privacy gates matter more than
 | Release | Audience | Must be true |
 | --- | --- | --- |
 | `0.0.x` | You only | Stages 0 to 3 pass |
-| `0.1.0-dev` | You, on real work | Stages 4 and 5 pass, and redaction is proven |
-| `0.1.0-alpha` | Three to five trusted testers | Stage 6 passes, and testers receive the limits document |
+| `0.0.x` | You, on real work | Stages 4 and 5 pass, and redaction is proven |
+| `0.1.0-alpha.N` | Three to five trusted testers | Stage 6 passes, and testers receive the limits document |
 | `0.1.0` | Public open source | Alpha findings are resolved, and a license is chosen |
+
+Builds before the tester alpha stay on `0.0.x`, because semver sorts a prerelease such as `0.1.0-dev` after `0.1.0-alpha`, which would make a dev build look newer than the alpha.
 
 Every release should include a changelog, tested Claude Code versions, known limits, and data migration notes.
 
 ## Risks and stop conditions
 
-Check this register at the end of each stage. If one of the stop conditions occurs, pause and decide before spending more time.
+Check this register at the end of each stage.
+If one of the stop conditions occurs, pause and decide before spending more time.
 
 | Risk | Likelihood | Impact | Response |
 | --- | --- | --- | --- |
@@ -226,18 +244,19 @@ Check this register at the end of each stage. If one of the stop conditions occu
 
 ## Before coding starts
 
-These items should be settled first. Most take minutes, and they prevent rework later.
+These items should be settled first.
+Most take minutes, and they prevent rework later.
 
 - [ ] Confirm the Phase 1 scope and out-of-scope list
 - [ ] Choose the development computer and operating system
-- [ ] Confirm Claude Code hooks work on that computer
+- [x] Confirm Claude Code hooks work on that computer (real payloads captured with Claude Code 2.1.318 on macOS, 2026-11-04)
 - [ ] Create a separate test account with no real secrets
 - [ ] Create two disposable test repositories
-- [ ] Review the architecture decisions and mark any changes
-- [ ] Choose a working project name and repository name
-- [ ] Decide when the repository becomes public
+- [x] Review the architecture decisions and mark any changes (changes recorded as ADR-016 to ADR-029)
+- [x] Choose a working project name and repository name (Stillwatch, github.com/pranish-k/StillWatch)
+- [x] Decide when the repository becomes public (it is public)
 - [ ] Set a weekly time budget
 - [ ] Identify three to five alpha testers
 - [ ] Write the top three questions you want the alpha to answer
 
-After this checklist, begin with task S0-01 in the Phase 1 task plan.
+After this checklist, begin with task S0-01 in the [Phase 1 task plan](phase-1-task-plan.md).

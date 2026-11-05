@@ -1,18 +1,26 @@
 # Secure Agent Runtime: Project Brief
 
+> **Note:** This is a separate project idea, considered alongside Stillwatch, and it is not part of the Stillwatch build.
+> It relates to Stillwatch's later stages: optional blocking and lower-level monitoring.
+
 Nov 2, 2026
 
 ## Summary
 
-Build a secure runtime for AI agents on Linux, not a new operating system. It runs each task in an isolated environment, with authority that expires when the task ends or the agent dies.
+Build a secure runtime for AI agents on Linux, not a new operating system.
+It runs each task in an isolated environment, with authority that expires when the task ends or the agent dies.
 
-The core rule is simple: a dead agent can leave information behind, but never authority. A new agent can read approved traces, but it needs a fresh grant to act.
+The core rule is simple: a dead agent can leave information behind, but never authority.
+A new agent can read approved traces, but it needs a fresh grant to act.
 
-The bottom line: a working demo is realistic for one strong engineer. A sellable product is much harder, because well-funded companies already cover much of this space. Treat the first phase as a serious learning project with a clear test for whether it should become a company.
+The bottom line: a working demo is realistic for one strong engineer.
+A sellable product is much harder, because well-funded companies already cover much of this space.
+Treat the first phase as a serious learning project with a clear test for whether it should become a company.
 
 ## Goal
 
-The goal is to stop agent work from continuing without valid authorization. The first target user is a developer or small team running coding agents unattended.
+The goal is to stop agent work from continuing without valid authorization.
+The first target user is a developer or small team running coding agents unattended.
 
 The first version must prove four things:
 
@@ -25,7 +33,8 @@ These are out of scope for now: a custom kernel, a custom Linux distribution, a 
 
 ## The commitment
 
-Expect 6 to 9 months part-time to reach a credible demo, and years of focused work if this becomes a company. These are planning estimates, not sourced figures, and they assume one experienced engineer using AI coding tools.
+Expect 6 to 9 months part-time to reach a credible demo, and years of focused work if this becomes a company.
+These are planning estimates, not sourced figures, and they assume one experienced engineer using AI coding tools.
 
 | Stage | Time | Likely cash cost | What you are signing up for |
 | --- | --- | --- | --- |
@@ -34,13 +43,17 @@ Expect 6 to 9 months part-time to reach a credible demo, and years of focused wo
 | Early adopters | 6 to 12 more months | $200 to $2,000 a month | User interviews, support, documentation, and security fixes |
 | Company | Multi-year, full-time | Depends on funding | Hiring, sales, audits, on-call duty, and security response |
 
-The hardest part may not be the code. A security product makes a promise, so every serious bug becomes your responsibility. Customers will also expect a security audit and a plan for handling vulnerabilities.
+The hardest part may not be the code.
+A security product makes a promise, so every serious bug becomes your responsibility.
+Customers will also expect a security audit and a plan for handling vulnerabilities.
 
-Assume you will need a co-founder or specialist if this becomes a company. One person can build the demo, but enterprise security sales usually require trust, audits, and support capacity.
+Assume you will need a co-founder or specialist if this becomes a company.
+One person can build the demo, but enterprise security sales usually require trust, audits, and support capacity.
 
 ## Prerequisites
 
-You need solid programming skills and a Linux machine with hardware virtualization. You can learn the systems and security topics during the project, but not from zero programming experience.
+You need solid programming skills and a Linux machine with hardware virtualization.
+You can learn the systems and security topics during the project, but not from zero programming experience.
 
 **Skills**
 
@@ -58,13 +71,17 @@ You need solid programming skills and a Linux machine with hardware virtualizati
 - API access for one existing coding agent
 - A separate test account with no real secrets
 
-Cloud hosting needs care. Firecracker's guide says AWS EC2 only supports KVM on `.metal` instances, which can be expensive. A dedicated server or spare Linux PC may be cheaper for development.
+Cloud hosting needs care.
+Firecracker's guide says AWS EC2 only supports KVM on `.metal` instances, which can be expensive.
+A dedicated server or spare Linux PC may be cheaper for development.
 
-On a Mac, Firecracker won't run directly. Develop on a remote Linux machine first, then consider a Mac version after the core design works.
+On a Mac, Firecracker won't run directly.
+Develop on a remote Linux machine first, then consider a Mac version after the core design works.
 
 ## Stack and glossary
 
-Use proven open-source parts for isolation and monitoring, and spend your effort on the supervisor. It is the only part of the stack that is really yours.
+Use proven open-source parts for isolation and monitoring, and spend your effort on the supervisor.
+It is the only part of the stack that is really yours.
 
 | Term | What it means | Purpose here | Build or reuse |
 | --- | --- | --- | --- |
@@ -88,11 +105,13 @@ Use proven open-source parts for isolation and monitoring, and spend your effort
 | Audit log | A tamper-resistant activity record | Explains what happened and why it was allowed | Build |
 | Review agent | A restricted AI reviewer | Examines flagged events and can only freeze or deny | Build later |
 
-I recommend Rust for the supervisor if you already know it, or Go if you want to move faster. Avoid large frameworks in the trusted layer, because every dependency adds risk.
+I recommend Rust for the supervisor if you already know it, or Go if you want to move faster.
+Avoid large frameworks in the trusted layer, because every dependency adds risk.
 
 ## High-level execution
 
-Build the core on Linux first, prove the dead-agent demo, then test whether anyone wants it. Each phase ends with a gate, so you can stop or change direction before committing more time.
+Build the core on Linux first, prove the dead-agent demo, then test whether anyone wants it.
+Each phase ends with a gate, so you can stop or change direction before committing more time.
 
 | Phase | Timing | Work | Gate |
 | --- | --- | --- | --- |
@@ -102,11 +121,13 @@ Build the core on Linux first, prove the dead-agent demo, then test whether anyo
 | 4: Validation | Months 7 to 9 | Interview teams running agents, publish the core as open source, and support early users on real workflows | Five teams use it on real work, and one would miss it if it went |
 | 5: Product | Month 10 onward | Add monitoring, the review agent, a dashboard, and an external audit, and consider a Mac app only after the Linux core proves useful | Continue, pivot, or stop, based on real usage and demand |
 
-Phase 3 is the key milestone, because it proves the idea that makes this project different. If a gate fails, fix the issue or stop before moving on.
+Phase 3 is the key milestone, because it proves the idea that makes this project different.
+If a gate fails, fix the issue or stop before moving on.
 
 ## Competitive landscape
 
-The market is crowded and moving quickly, so a general agent sandbox isn't a good wedge. The opening is narrower: authority over time, across agents, handoffs, and leftover work.
+The market is crowded and moving quickly, so a general agent sandbox isn't a good wedge.
+The opening is narrower: authority over time, across agents, handoffs, and leftover work.
 
 | Layer | Who is there | What they cover | Implication |
 | --- | --- | --- | --- |
@@ -116,25 +137,35 @@ The market is crowded and moving quickly, so a general agent sandbox isn't a goo
 | Agent identity | [Cyera with Oasis, and Okta with Permiso](https://www.startuphub.ai/ai-news/ai-news/2026/agentic-ai-governance-five-deals-week-july-2026) | Agent credentials, permissions, and governance | Large buyers are paying for this layer |
 | Runtime platforms | [Nvidia and Microsoft, among others](https://wetheflywheel.com/en/guides/ai-agent-security-vendors-2026/) | Monitoring and controls around running agents | Platform owners want this as a built-in feature |
 
-The recent deal activity cuts both ways. Cyera agreed to pay about $1 billion for Oasis, and Okta agreed to pay about $200 million for Permiso, which shows demand. It also means you would face strong, funded competitors.
+The recent deal activity cuts both ways.
+Cyera agreed to pay about $1 billion for Oasis, and Okta agreed to pay about $200 million for Permiso, which shows demand.
+It also means you would face strong, funded competitors.
 
-The best position is probably a small open-source authority layer that works with existing sandboxes. You would avoid rebuilding isolation and could focus on grants, leases, trace rules, and audit records. Check this assumption early by trying to run the supervisor on top of Docker Sandboxes or E2B.
+The best position is probably a small open-source authority layer that works with existing sandboxes.
+You would avoid rebuilding isolation and could focus on grants, leases, trace rules, and audit records.
+Check this assumption early by trying to run the supervisor on top of Docker Sandboxes or E2B.
 
 ## Why this could succeed
 
-The problem is real, and sandboxing alone doesn't fully solve it. In July 2026, [Pillar Security disclosed seven escapes and bypasses across four coding agents](https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-coding-agent-sandbox-escapes-20260722-c/). None broke the sandbox itself. They exploited files that trusted components outside the sandbox later read, ran, or scanned.
+The problem is real, and sandboxing alone doesn't fully solve it.
+In July 2026, [Pillar Security disclosed seven escapes and bypasses across four coding agents](https://labs.cloudsecurityalliance.org/research/csa-research-note-ai-coding-agent-sandbox-escapes-20260722-c/).
+None broke the sandbox itself.
+They exploited files that trusted components outside the sandbox later read, ran, or scanned.
 
-That pattern is close to your dead-agent problem: something left behind later gains power it should never have had. It gives this project a specific story, rather than yet another sandbox.
+That pattern is close to your dead-agent problem: something left behind later gains power it should never have had.
+It gives this project a specific story, rather than yet another sandbox.
 
 - **Clear demo:** kill an agent, start a successor, and show that the sensitive step stays blocked.
 - **Strong primitives:** Linux, Firecracker, and Tetragon already handle much of the hard low-level work.
 - **Growing demand:** agent security is attracting serious budgets and acquisitions.
-- **Neutral position:** some teams may want one control layer across several models and clouds, rather than relying on one vendor. This still needs testing with real buyers.
+- **Neutral position:** some teams may want one control layer across several models and clouds, rather than relying on one vendor.
+  This still needs testing with real buyers.
 - **Open source path:** a small, inspectable runtime can earn developer trust and adoption.
 
 ## Why this could fail
 
-The biggest risk is that this becomes a feature rather than a product. Sandbox companies, agent vendors, or platform owners could add grants and leases before you find a market.
+The biggest risk is that this becomes a feature rather than a product.
+Sandbox companies, agent vendors, or platform owners could add grants and leases before you find a market.
 
 | Risk | Why it matters | Mitigation |
 | --- | --- | --- |
@@ -150,11 +181,14 @@ The biggest risk is that this becomes a feature rather than a product. Sandbox c
 | No clear buyer | Developers like tools, but budgets may sit elsewhere | Run customer interviews before building a company |
 | Burnout | Security products demand constant maintenance | Set decision gates and allow yourself to stop |
 
-Also assume the product can't make prompt injection disappear. Its job is to limit the damage, make authority explicit, and leave a clear record.
+Also assume the product can't make prompt injection disappear.
+Its job is to limit the damage, make authority explicit, and leave a clear record.
 
 ## What can come out of this
 
-The most likely good outcome is a respected open-source project and rare systems security experience. A venture-scale company is possible, but it shouldn't be the plan you depend on. These are judgment calls, not statistical predictions.
+The most likely good outcome is a respected open-source project and rare systems security experience.
+A venture-scale company is possible, but it shouldn't be the plan you depend on.
+These are judgment calls, not statistical predictions.
 
 | Outcome | Likelihood | What you get |
 | --- | --- | --- |
@@ -169,7 +203,8 @@ A realistic success test for the first year is simple: at least five teams try i
 
 ## Sources
 
-Time, cost, and likelihood figures are planning judgments, not sourced data. Market details are as of the pages below and may change quickly.
+Time, cost, and likelihood figures are planning judgments, not sourced data.
+Market details are as of the pages below and may change quickly.
 
 - [Firecracker getting started guide](https://github.com/firecracker-microvm/firecracker/blob/main/docs/getting-started.md)
 - [Claude Code sandboxing documentation](https://code.claude.com/docs/en/sandboxing)

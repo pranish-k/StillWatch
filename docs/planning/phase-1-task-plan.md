@@ -1,14 +1,17 @@
 # Stillwatch: Phase 1 Task Plan
 
-This plan breaks Phase 1 into tasks small enough to complete in a sitting or two. Work through the stages in order, and tick each task when it meets the definition of done.
+This plan breaks Phase 1 into tasks small enough to complete in a sitting or two.
+Work through the stages in order, and tick each task when it meets the definition of done in the [Project Guideline](project-guideline.md).
 
-Estimates are rough focused hours, and they total about 150 hours. If you finish a stage early, don't add scope; move to the next gate.
+Estimates are rough focused hours, and they total about 150 hours.
+If you finish a stage early, don't add scope; move to the next gate.
 
 Each task lists its ID, work, output, dependency, and estimate.
 
 ## Stage 0: Foundations
 
-**Goal:** Create a clean project, confirm the hook data you depend on, and lock the shared formats. *About 15 hours.*
+**Goal:** Create a clean project, confirm the hook data you depend on, and lock the shared formats.
+*About 15 hours.*
 
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
@@ -24,7 +27,8 @@ Each task lists its ID, work, output, dependency, and estimate.
 
 ## Stage 1: Capture
 
-**Goal:** Reliably capture every available event without slowing the agent. *About 15 hours.*
+**Goal:** Reliably capture every available event without slowing the agent.
+*About 15 hours.*
 
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
@@ -36,11 +40,14 @@ Each task lists its ID, work, output, dependency, and estimate.
 | ☐ | S1-06 | Measure hook delay | Timing results | S1-02 | 1 |
 | ☐ | S1-07 | Test killed sessions, full disks, and missing folders | Failure tests | S1-02 | 2 |
 
+The hook handler became a POSIX shell script that writes one file per event ([ADR-016](../decisions/README.md#adr-016-the-capture-hook-is-a-posix-shell-script-that-only-spools-raw-payloads), [ADR-017](../decisions/README.md#adr-017-one-file-per-event-in-a-maildir-style-spool)).
+
 **Exit gate:** real sessions produce complete spool records, failures never crash the agent, and removal restores the original settings.
 
 ## Stage 2: Store and timeline
 
-**Goal:** Turn raw events into a safe, readable session history. *About 15 hours.*
+**Goal:** Turn raw events into a safe, readable session history.
+*About 15 hours.*
 
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
@@ -58,7 +65,8 @@ Each task lists its ID, work, output, dependency, and estimate.
 
 ## Stage 3: Change tracking
 
-**Goal:** Compare what the agent reported with what actually changed. *About 15 hours.*
+**Goal:** Compare what the agent reported with what actually changed.
+*About 15 hours.*
 
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
@@ -74,7 +82,8 @@ Each task lists its ID, work, output, dependency, and estimate.
 
 ## Stage 4: Detection
 
-**Goal:** Identify sensitive access and anything likely to outlive the session. *About 30 hours.*
+**Goal:** Identify sensitive access and anything likely to outlive the session.
+*About 30 hours.*
 
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
@@ -94,7 +103,8 @@ Each task lists its ID, work, output, dependency, and estimate.
 
 ## Stage 5: Reports
 
-**Goal:** Make a session understandable in about a minute. *About 15 hours.*
+**Goal:** Make a session understandable in about a minute.
+*About 15 hours.*
 
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
@@ -110,7 +120,8 @@ Each task lists its ID, work, output, dependency, and estimate.
 
 ## Stage 6: Hardening
 
-**Goal:** Attack the app, fix what breaks, and make it installable by someone else. *About 30 hours.*
+**Goal:** Attack the app, fix what breaks, and make it installable by someone else.
+*About 30 hours.*
 
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
@@ -129,7 +140,8 @@ Each task lists its ID, work, output, dependency, and estimate.
 
 ## Stage 7: Private alpha
 
-**Goal:** Find out whether real users trust the app and keep opening it. *About 15 hours.*
+**Goal:** Find out whether real users trust the app and keep opening it.
+*About 15 hours.*
 
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
@@ -151,6 +163,25 @@ Each task lists its ID, work, output, dependency, and estimate.
 
 **Exit gate:** the alpha findings support a clear decision to continue, change direction, or stop.
 
+## Added during the build
+
+These tasks were added while building Phase 1.
+The [detailed spec](detailed-spec.md) lists these rules, but the original plan had no task for them, and two capture tasks came out of the architecture decisions.
+Their hours are outside the original 150-hour estimate.
+Each rule task includes its positive and normal-use tests.
+
+| Done | ID | Task | Output | Needs | Hours |
+| --- | --- | --- | --- | --- | --- |
+| ☐ | S1-08 | Build the installer package that adds and removes only Stillwatch's hook entries | `packages/installer` | S1-03 | 3 |
+| ☐ | S1-09 | Start the collector from the capture hook when it is not running | Collector auto-start (ADR-024) | S1-02 | 1 |
+| ☐ | S4-12 | Add prompt injection signals and the possible prompt injection rule | Injection findings | S4-01, S4-09 | 3 |
+| ☐ | S4-13 | Add the new package rule | Dependency findings | S4-01 | 2 |
+| ☐ | S4-14 | Add the monitor tampering rule | Tampering findings | S4-01 | 2 |
+| ☐ | S4-15 | Add the unattributed change rule | Evidence mismatch findings | S3-06, S4-01 | 2 |
+| ☐ | S4-16 | Add the new domain rule | Network findings | S4-09 | 1 |
+| ☐ | S4-17 | Add the background task rule | Leftover process findings | S4-01, S3-04 | 1 |
+
 ## After Phase 1
 
-If the alpha is positive, Phase 2 should add AI summaries, task scope checks, and Codex support. Don't begin that work until the Stage 7 decision is written.
+If the alpha is positive, Phase 2 should add AI summaries, task scope checks, and Codex support.
+Don't begin that work until the Stage 7 decision is written.

@@ -59,6 +59,7 @@ function convert(value: unknown, depth: number, maxDepth: number): JsonValue {
     case 'bigint':
       return null;
   }
+  return null;
 }
 
 /**

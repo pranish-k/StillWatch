@@ -208,6 +208,9 @@ importers:
       '@stillwatch/collector':
         specifier: workspace:*
         version: link:../collector
+      '@stillwatch/installer':
+        specifier: workspace:*
+        version: link:../../packages/installer
       '@stillwatch/lab':
         specifier: workspace:*
         version: link:../../lab
@@ -232,6 +235,9 @@ importers:
       '@stillwatch/git-tracker':
         specifier: workspace:*
         version: link:../../packages/git-tracker
+      '@stillwatch/installer':
+        specifier: workspace:*
+        version: link:../../packages/installer
       '@stillwatch/redaction':
         specifier: workspace:*
         version: link:../../packages/redaction
@@ -314,6 +320,15 @@ importers:
 
   packages/git-tracker:
     dependencies:
+      '@stillwatch/schema':
+        specifier: workspace:*
+        version: link:../schema
+
+  packages/installer:
+    dependencies:
+      '@stillwatch/adapter-claude':
+        specifier: workspace:*
+        version: link:../adapter-claude
       '@stillwatch/schema':
         specifier: workspace:*
         version: link:../schema

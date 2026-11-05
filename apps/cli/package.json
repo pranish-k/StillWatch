@@ -34,11 +34,12 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "@stillwatch/schema": "workspace:*",
-    "@stillwatch/collector": "workspace:*",
     "@stillwatch/adapter-claude": "workspace:*",
-    "@stillwatch/storage": "workspace:*",
+    "@stillwatch/collector": "workspace:*",
+    "@stillwatch/installer": "workspace:*",
+    "@stillwatch/lab": "workspace:*",
     "@stillwatch/reports": "workspace:*",
-    "@stillwatch/lab": "workspace:*"
+    "@stillwatch/schema": "workspace:*",
+    "@stillwatch/storage": "workspace:*"
   }
 }

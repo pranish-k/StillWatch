@@ -11,13 +11,14 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@stillwatch/schema": "workspace:*",
-    "@stillwatch/redaction": "workspace:*",
     "@stillwatch/adapter-claude": "workspace:*",
-    "@stillwatch/storage": "workspace:*",
-    "@stillwatch/git-tracker": "workspace:*",
     "@stillwatch/facts": "workspace:*",
+    "@stillwatch/git-tracker": "workspace:*",
+    "@stillwatch/installer": "workspace:*",
+    "@stillwatch/redaction": "workspace:*",
+    "@stillwatch/reports": "workspace:*",
     "@stillwatch/rules": "workspace:*",
-    "@stillwatch/reports": "workspace:*"
+    "@stillwatch/schema": "workspace:*",
+    "@stillwatch/storage": "workspace:*"
   }
 }

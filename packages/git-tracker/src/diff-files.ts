@@ -126,6 +126,13 @@ export async function diffRepo(
     ...out,
     errors: [...out.errors, `${root}: ${message}`],
   });
+  // A failed snapshot has no HEAD and no overlay; comparing it would invent changes.
+  const unusable = (repo: RepoSnapshot): boolean =>
+    repo.error !== null && repo.head === null && Object.keys(repo.overlay).length === 0;
+  if (unusable(start) || unusable(end)) {
+    const reason = unusable(start) ? `start: ${start.error ?? ''}` : `end: ${end.error ?? ''}`;
+    return fail(`not compared, snapshot failed (${reason})`);
+  }
   if (start.error !== null) out.errors.push(`${root}: start snapshot incomplete: ${start.error}`);
   if (end.error !== null) out.errors.push(`${root}: end snapshot incomplete: ${end.error}`);
   if (start.overlayTruncated || end.overlayTruncated) out.truncated = true;

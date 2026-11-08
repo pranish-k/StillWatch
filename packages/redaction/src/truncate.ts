@@ -19,10 +19,10 @@ const MAX_SIZE_ROUNDS = 40;
 
 /** Moves a cut index back so it does not fall inside a redaction marker. */
 function backOffMarker(text: string, cut: number): number {
-  const windowStart = Math.max(0, cut - MAX_MARKER_LENGTH);
-  const found = text.slice(windowStart, cut).lastIndexOf(MARKER_PREFIX);
-  if (found === -1) return cut;
-  const start = windowStart + found;
+  if (cut <= 0) return cut;
+  // A marker that starts before the cut may end after it, even mid-prefix.
+  const start = text.lastIndexOf(MARKER_PREFIX, cut - 1);
+  if (start === -1 || start < cut - MAX_MARKER_LENGTH) return cut;
   MARKER_AT.lastIndex = start;
   const match = MARKER_AT.exec(text);
   if (match && start + match[0].length > cut) return start;

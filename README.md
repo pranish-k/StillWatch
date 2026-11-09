@@ -1,6 +1,8 @@
 # Stillwatch
 
 [![CI](https://github.com/pranish-k/StillWatch/actions/workflows/ci.yml/badge.svg)](https://github.com/pranish-k/StillWatch/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/stillwatch)](https://www.npmjs.com/package/stillwatch)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 A local flight recorder for coding agents: see what your agent did, what it touched, and what it left behind.
 

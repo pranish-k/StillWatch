@@ -132,7 +132,7 @@ The hook handler became a POSIX shell script that writes one file per event ([AD
 | ☐ | S6-05 | Review local service access controls | Access test results | S2-07 | 2 |
 | ☐ | S6-06 | Review dependencies | Dependency notes | S0-02 | 2 |
 | ☑ | S6-07 | Add retention and `stillwatch delete-data` | Data controls | S2-04 | 2 |
-| ☐ | S6-08 | Package for npm and test on a clean machine | Installable alpha | S1-04 | 3 |
+| ☑ | S6-08 | Package for npm and test on a clean machine | Installable alpha | S1-04 | 3 |
 | ☐ | S6-09 | Write setup, privacy, and limits documentation | Tester documents | S6-08 | 3 |
 | ☐ | S6-10 | Fix critical findings and record accepted risks | Security review notes | S6-02 to S6-07 | 3 |
 

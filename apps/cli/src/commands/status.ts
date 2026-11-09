@@ -8,15 +8,10 @@ import {
   type StillwatchConfig,
 } from '@stillwatch/schema';
 import { parse } from '../args';
-import {
-  detectClaude,
-  errorMessage,
-  isNpxCache,
-  openStoreIfExists,
-  stillwatchHome,
-} from '../common';
+import { detectClaude, errorMessage, openStoreIfExists, stillwatchHome } from '../common';
 import { exists } from '../fsutil';
 import { formatAgo, formatBytes, plural, type Ctx } from '../output';
+import { isTemporaryInstall } from '../runtime';
 import { VERSION } from '../version';
 
 export type StatusJson = {
@@ -127,9 +122,9 @@ export async function gatherStatus(ctx: Ctx): Promise<StatusJson> {
       warnings.push(
         "The Node or CLI path recorded at install no longer exists, so the hook cannot start the collector. Run 'stillwatch install' again.",
       );
-    } else if (isNpxCache(record.cliPath)) {
+    } else if (isTemporaryInstall(record.cliPath)) {
       warnings.push(
-        'Installed from the npx cache, which npm may clean up. Install with: npm install -g stillwatch',
+        "The hook runs Stillwatch from a temporary npm cache, which npm may clean up. Run 'npx stillwatch install' again to keep a stable copy.",
       );
     }
   }

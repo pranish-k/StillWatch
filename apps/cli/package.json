@@ -1,6 +1,6 @@
 {
   "name": "stillwatch",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.1",
   "description": "A local flight recorder for coding agents: see what your agent did, what it touched, and what it left behind.",
   "type": "module",
   "license": "MIT",
@@ -10,6 +10,8 @@
   "files": [
     "dist"
   ],
+  "homepage": "https://github.com/pranish-k/StillWatch#readme",
+  "bugs": "https://github.com/pranish-k/StillWatch/issues",
   "engines": {
     "node": ">=22.13.0"
   },
@@ -31,6 +33,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
+    "prepack": "node check-dist.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {

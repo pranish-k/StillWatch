@@ -82,6 +82,17 @@ pnpm check
 
 Pre-tester builds stay on `0.0.x`, because semver sorts `0.1.0-dev` after `0.1.0-alpha`.
 
+## Publishing
+
+The npm package is `apps/cli`, published as `stillwatch` ([ADR-031](decisions/README.md#adr-031-publish-one-npm-package-mit-licensed-with-alpha-versions-on-latest)).
+
+1. Set the version in `apps/cli/package.json`, then run `pnpm check`.
+2. Run `pnpm pack:cli`, which builds everything and writes `stillwatch-<version>.tgz` at the repository root.
+   Packing fails if the build is missing the CLI bundle, the dashboard, or `THIRD_PARTY_NOTICES.md`.
+3. Test the tarball in a sandbox with a temporary `HOME`, npm prefix, and npm cache, and a free `port` in the sandbox `config.json`: `npx <tarball> install`, delete the npm cache, and check that a hook event still starts the collector.
+4. Run `pnpm --filter stillwatch publish --tag latest --access public`, which publishes the same files after npm login.
+5. Tag the commit `v<version>` and push the tag.
+
 ## Dependencies
 
 The published package has no runtime dependencies ([ADR-019](decisions/README.md#adr-019-zero-runtime-dependencies-in-one-bundled-file)).

@@ -16,7 +16,6 @@ import {
   createdKeysOf,
   detectClaude,
   errorMessage,
-  isNpxCache,
   readConfigOrFail,
   stillwatchHome,
   type StoredInstallRecord,
@@ -25,6 +24,7 @@ import { unifiedDiff } from '../diff';
 import { startErrorText } from './collector';
 import { writeFileAtomic } from '../fsutil';
 import { plural, type Ctx } from '../output';
+import { installRuntime, isTemporaryInstall, type RuntimePaths } from '../runtime';
 import { VERSION } from '../version';
 
 const SCOPES: readonly HookScope[] = ['user', 'project', 'local'];
@@ -117,6 +117,9 @@ export async function installCommand(ctx: Ctx, args: string[]): Promise<number> 
       `Settings file: ${ctx.path(settingsPath)} (${scope} scope${before === null ? ', would be created' : ''})`,
     );
     ctx.out(`Hook script:   ${ctx.path(paths.hookScript)}`);
+    if (isTemporaryInstall(deps.cliPath)) {
+      ctx.out(`App copy:      ${ctx.path(paths.app)} (running from a temporary npm cache)`);
+    }
     if (!add.changed) {
       ctx.out(`All ${plural(add.alreadyPresent.length, 'hook event')} are already installed.`);
       return 0;
@@ -143,17 +146,25 @@ export async function installCommand(ctx: Ctx, args: string[]): Promise<number> 
 
   await deps.collector.ensureDataDirs(home);
   const config = await deps.collector.loadOrCreateConfig(home, now);
-  const hookScriptText = deps.collector.renderHookScript({
-    stillwatchHome: home,
-    nodePath: deps.execPath,
-    cliPath: deps.cliPath,
-  });
-  await writeFileAtomic(paths.hookScript, hookScriptText, 0o700);
-  if (isNpxCache(deps.cliPath)) {
-    ctx.warn(
-      'Stillwatch is running from the npx cache, which npm may clean up; the hook could then not start the collector. Install it with: npm install -g stillwatch',
+  let runtime: RuntimePaths;
+  try {
+    runtime = await installRuntime({
+      stillwatchHome: home,
+      execPath: deps.execPath,
+      cliPath: deps.cliPath,
+      pathValue: deps.env.PATH,
+    });
+  } catch (error) {
+    throw new CliError(
+      `Cannot copy Stillwatch to ${ctx.path(paths.app)}: ${errorMessage(error)} Nothing was changed.`,
     );
   }
+  const hookScriptText = deps.collector.renderHookScript({
+    stillwatchHome: home,
+    nodePath: runtime.nodePath,
+    cliPath: runtime.cliPath,
+  });
+  await writeFileAtomic(paths.hookScript, hookScriptText, 0o700);
 
   let backupPath: string | null = null;
   if (add.changed) {
@@ -170,8 +181,8 @@ export async function installCommand(ctx: Ctx, args: string[]): Promise<number> 
     backupPath: prior !== null ? prior.backupPath : backupPath,
     events: plan.map((entry) => entry.event),
     hookScript: paths.hookScript,
-    nodePath: deps.execPath,
-    cliPath: deps.cliPath,
+    nodePath: runtime.nodePath,
+    cliPath: runtime.cliPath,
     claudeVersion,
     stillwatchVersion: VERSION,
     createdEventKeys: [...new Set([...priorCreated, ...add.createdEventKeys])],
@@ -191,11 +202,14 @@ export async function installCommand(ctx: Ctx, args: string[]): Promise<number> 
   ];
   if (backupPath !== null) rows.push(['Backup', ctx.path(backupPath)]);
   rows.push(['Hook script', ctx.path(paths.hookScript)]);
+  if (runtime.copiedTo !== null) {
+    rows.push(['App', `${ctx.path(runtime.copiedTo)} (copied from the npm cache)`]);
+  }
   rows.push(['Data', ctx.path(home)]);
   if (values['no-start'] === true) {
     rows.push(['Collector', 'not started (--no-start); it starts with the next session']);
   } else {
-    rows.push(['Collector', await ensureCollectorRunning(ctx, home)]);
+    rows.push(['Collector', await ensureCollectorRunning(ctx, home, runtime)]);
   }
   for (const [label, value] of rows) ctx.out(`  ${label.padEnd(12)} ${value}`);
   if (scope === 'project') {
@@ -212,14 +226,18 @@ export async function installCommand(ctx: Ctx, args: string[]): Promise<number> 
   return 0;
 }
 
-async function ensureCollectorRunning(ctx: Ctx, home: string): Promise<string> {
+async function ensureCollectorRunning(
+  ctx: Ctx,
+  home: string,
+  runtime: RuntimePaths,
+): Promise<string> {
   try {
     const status = await ctx.deps.collector.collectorStatus(home);
     if (status.running) return `already running (pid ${status.pid ?? '?'})`;
     const { pid } = await ctx.deps.collector.startCollector({
       stillwatchHome: home,
-      nodePath: ctx.deps.execPath,
-      cliPath: ctx.deps.cliPath,
+      nodePath: runtime.nodePath,
+      cliPath: runtime.cliPath,
     });
     return `started (pid ${pid})`;
   } catch (error) {
@@ -250,6 +268,7 @@ const OWNED_ENTRIES = [
   'backups',
   'run',
   'logs',
+  'app',
 ];
 
 export async function uninstallCommand(ctx: Ctx, args: string[]): Promise<number> {
@@ -359,7 +378,7 @@ async function purgeHome(home: string): Promise<string[]> {
     return [];
   }
   for (const entry of entries) {
-    if (OWNED_ENTRIES.includes(entry) || /^\.config\.json\..*\.tmp$/.test(entry)) {
+    if (OWNED_ENTRIES.includes(entry) || /^\.(config\.json|app)\..*\.(tmp|old)$/.test(entry)) {
       await rm(join(home, entry), { recursive: true, force: true });
     }
   }

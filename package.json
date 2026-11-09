@@ -19,7 +19,8 @@
     "test:perf": "vitest run --project perf",
     "test:watch": "vitest",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
-    "lab": "pnpm --filter stillwatch run build && node apps/cli/dist/stillwatch.mjs lab"
+    "lab": "pnpm --filter stillwatch run build && node apps/cli/dist/stillwatch.mjs lab",
+    "pack:cli": "pnpm build && pnpm --filter stillwatch pack --pack-destination ."
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

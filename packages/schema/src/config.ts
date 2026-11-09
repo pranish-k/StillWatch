@@ -72,6 +72,8 @@ export type StillwatchPaths = {
   pidFile: string;
   logs: string;
   logFile: string;
+  /** A stable copy of the CLI, made when it was installed from a temporary cache like npx. */
+  app: string;
 };
 
 /** Directory layout under the Stillwatch home. Pure string joins. */
@@ -91,6 +93,7 @@ export function stillwatchPaths(stillwatchHome: string): StillwatchPaths {
     pidFile: joinPath(home, 'run', 'collector.pid'),
     logs: joinPath(home, 'logs'),
     logFile: joinPath(home, 'logs', 'collector.log'),
+    app: joinPath(home, 'app'),
   };
 }
 

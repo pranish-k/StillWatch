@@ -36,6 +36,8 @@ ADR-016 onward record choices made while building.
 | ADR-027 | Redaction fingerprints and data minimization limits | Accepted |
 | ADR-028 | User-scope install by default | Accepted |
 | ADR-029 | pnpm workspace with internal TypeScript-source packages | Accepted |
+| ADR-030 | The hook runs from stable paths, copying the CLI out of temporary caches | Accepted |
+| ADR-031 | Publish one npm package, MIT licensed, with alpha versions on `latest` | Accepted |
 
 To change a decision, add a new record that replaces the old one.
 Keep the original, so the reasoning stays visible.
@@ -427,11 +429,40 @@ Building each package separately adds steps and stale outputs.
 **Cost:** Contributors need pnpm 12.
 Code runs through Vitest or after bundling, not directly with Node.
 
+### ADR-030: The hook runs from stable paths, copying the CLI out of temporary caches
+
+**Decision:** Install stores the Node binary and CLI file that the hook uses to start the collector, and both must outlive the install command.
+When the CLI runs from a temporary package cache (`npx`, `pnpm dlx`), install copies the bundle to `~/.stillwatch/app` and records the copy.
+When the `node` on `PATH` is the same binary as the running Node, install records the `PATH` entry instead of the resolved one.
+
+**Why:** npm deletes `npx` caches without notice, and Homebrew removes the versioned Cellar path of the old Node on upgrade.
+Either one left the hook unable to start the collector, silently, until the user ran install again.
+
+**Alternatives:** Warning users not to install with `npx` still left a broken hook for anyone who did.
+Always copying the CLI would make `npm update -g` ineffective until the next install, and two versions could run side by side.
+
+**Cost:** About 300 KB of disk in the Stillwatch home for `npx` users, and the copy updates only when install runs again.
+
+### ADR-031: Publish one npm package, MIT licensed, with alpha versions on `latest`
+
+**Decision:** `apps/cli` is published as `stillwatch`: the bundled CLI, the built dashboard, and notices for the bundled third-party code.
+Internal packages are not published.
+The license is MIT.
+Alpha versions (`0.1.0-alpha.N`) are published to the `latest` tag, so `npx stillwatch install` works without a version.
+
+**Why:** One package with no runtime dependencies installs in seconds and has nothing to resolve or audit at install time.
+MIT keeps it easy for testers and contributors to use and change.
+Before `0.1.0` there is no stable release that the `latest` tag would protect.
+
+**Alternatives:** Publishing internal packages adds versions to keep in step with no user for them yet.
+An `alpha` tag would make every command need `stillwatch@alpha`.
+
+**Cost:** Once `0.1.0` ships, prereleases must move to their own tag.
+
 ## Decisions to make later
 
 | Topic | Revisit when |
 | --- | --- |
-| Open-source license | Before public release |
 | AI summary provider | Phase 2 planning |
 | Network capture method | After reviewing alpha needs |
 | Lower-level monitoring | After hook limits are measured |

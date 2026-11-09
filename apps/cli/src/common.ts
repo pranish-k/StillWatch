@@ -64,10 +64,6 @@ export async function createdKeysOf(record: InstallRecord): Promise<string[]> {
   }
 }
 
-export function isNpxCache(path: string): boolean {
-  return path.includes('/_npx/');
-}
-
 /** Opens the store, or returns null when the database does not exist yet. */
 export async function openStoreIfExists(
   ctx: Ctx,

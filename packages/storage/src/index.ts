@@ -58,7 +58,19 @@ import type {
   SessionStatus,
   StoredEvent,
 } from '@stillwatch/schema';
+import * as analysis from './analysis';
+import { Connection } from './connection';
+import * as events from './events';
+import { insertEvents as ingest } from './ingest';
+import * as maintenance from './maintenance';
+import * as sessions from './sessions';
+import { installSqliteWarningFilter as installFilter } from './sqlite';
 
+export { InvalidCursorError } from './cursor';
+export { MAX_EVENT_PAGE } from './events';
+export { MAX_SESSION_PAGE } from './sessions';
+
+/** Current database schema version (PRAGMA user_version). */
 export const DB_SCHEMA_VERSION = 1;
 
 export type InsertEventInput = {
@@ -153,8 +165,66 @@ export type Store = {
   counts(): { sessions: number; events: number; sizeBytes: number };
 };
 
-export function openStore(_options: StoreOptions): Store {
-  throw new Error('not implemented: openStore');
+/**
+ * Opens (creating and migrating when needed) the Stillwatch database.
+ * With `readonly: true` the database must already exist at the current schema
+ * version; no migration runs and every write fails.
+ */
+export function openStore(options: StoreOptions): Store {
+  const now = options.now ?? Date.now;
+  const conn = Connection.open({
+    path: options.path,
+    readonly: options.readonly ?? false,
+    schemaVersion: DB_SCHEMA_VERSION,
+    now,
+  });
+  return {
+    path: options.path,
+    close: () => {
+      conn.close();
+    },
+    insertEvents: (items) => {
+      const result = ingest(conn, items, now);
+      conn.restrictFiles();
+      return result;
+    },
+    saveSnapshot: (snapshot) => {
+      maintenance.saveSnapshot(conn, snapshot);
+    },
+    getSnapshot: (sessionId, kind) => maintenance.getSnapshot(conn, sessionId, kind),
+    addGap: (gap) => {
+      maintenance.addGap(conn, gap);
+    },
+    getGaps: (sessionId, gapOptions) =>
+      sessions.getGaps(conn, sessionId, gapOptions?.excludeSource ?? null),
+    saveAnalysis: (sessionId, result, meta) => {
+      analysis.saveAnalysis(conn, sessionId, result, meta, now);
+    },
+    setSessionStatus: (sessionId, status, endReason, endedAt) => {
+      analysis.setSessionStatus(conn, sessionId, status, endReason, endedAt);
+    },
+    markForAnalysis: (sessionId) => {
+      analysis.markForAnalysis(conn, sessionId);
+    },
+    pendingAnalysis: () => analysis.pendingAnalysis(conn),
+    getPriorContext: (sessionId) => analysis.getPriorContext(conn, sessionId),
+    getSession: (id) => sessions.getSession(conn, id),
+    listSessions: (query) => sessions.listSessions(conn, query),
+    getSessionDetail: (id) => sessions.getSessionDetail(conn, id),
+    getSessionEvents: (sessionId) => events.getSessionEvents(conn, sessionId),
+    listEvents: (sessionId, listOptions) => events.listEvents(conn, sessionId, listOptions),
+    getEvent: (id) => events.getEvent(conn, id),
+    findingIdsByEvent: (sessionId) => analysis.findingIdsByEvent(conn, sessionId),
+    sessionsWithStatus: (status) => sessions.sessionsWithStatus(conn, status),
+    lastEventAt: () => maintenance.lastEventAt(conn),
+    deleteSession: (id) => maintenance.deleteSession(conn, id),
+    deleteSessionsBefore: (cutoff) => maintenance.deleteSessionsBefore(conn, cutoff),
+    deleteAll: () => {
+      maintenance.deleteAll(conn);
+    },
+    verifyChain: (sessionId) => maintenance.verifyChain(conn, sessionId),
+    counts: () => maintenance.counts(conn),
+  };
 }
 
 /**
@@ -162,5 +232,5 @@ export function openStore(_options: StoreOptions): Store {
  * Idempotent. Call before the first `openStore`.
  */
 export function installSqliteWarningFilter(): void {
-  throw new Error('not implemented: installSqliteWarningFilter');
+  installFilter();
 }

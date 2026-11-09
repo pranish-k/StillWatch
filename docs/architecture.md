@@ -37,6 +37,7 @@ There are no runtime dependencies: Node built-ins only (`node:sqlite`, `node:htt
 | --- | --- | --- |
 | `packages/schema` | Shared types, constants, pure helpers (runs in Node and the browser) | none |
 | `packages/adapter-claude` | Hook event spec, payload normalization, transcript reading | schema |
+| `packages/installer` | Claude Code settings editing and install checks | schema, adapter-claude |
 | `packages/redaction` | Secret redaction and data minimization | schema |
 | `packages/storage` | SQLite store, migrations, hash chain, queries | schema |
 | `packages/git-tracker` | Repository and persistence-surface snapshots and diffs | schema |
@@ -45,7 +46,7 @@ There are no runtime dependencies: Node built-ins only (`node:sqlite`, `node:htt
 | `packages/reports` | Report model, summaries, Markdown, event descriptions | schema |
 | `apps/collector` | Data dir, config, hook script, import pipeline, snapshots, analysis scheduling, HTTP API, auth | all packages |
 | `apps/web` | React dashboard, built to static files | schema |
-| `apps/cli` | The `stillwatch` command and the published npm package | collector, lab |
+| `apps/cli` | The `stillwatch` command and the published npm package | collector, installer, lab |
 | `lab` | Attack lab scenarios and scorecard | collector |
 
 Packages never reach into each other's internals; they import only from a package's `src/index.ts`.
@@ -196,7 +197,7 @@ These hold everywhere in the code base.
 
 | Path | Budget |
 | --- | --- |
-| Hook script per event | under 15 ms wall time on a laptop |
+| Hook script per event | under 15 ms wall time on a laptop, and no slower than starting `/bin/sh` and the processes it needs (`cat`, `mv`, and `mktemp` without `$RANDOM`) |
 | Import of one event (adapt, redact, facts, truncate, store) | under 2 ms median |
 | Start snapshot, typical repository | under 300 ms, never blocking the agent |
 | Session analysis, 2,000 events | under 200 ms |

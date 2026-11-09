@@ -218,7 +218,8 @@ export function buildSessionReport(
     });
 
   const summary = [
-    activitySentence(detail.stats, filesChanged.length, subagentCount),
+    // Only changes this session's tools or commands explain count as the agent's.
+    activitySentence(detail.stats, filesChanged.filter(byAgent).length, subagentCount),
     endingSentence(session, session.status, unfinished),
     findingsSentence(notable, low),
   ];
@@ -266,4 +267,8 @@ export function buildSessionReport(
     subagents,
     limits: [...REPORT_LIMITS],
   };
+}
+
+function byAgent(change: { attribution: string }): boolean {
+  return change.attribution === 'tool' || change.attribution === 'shell';
 }

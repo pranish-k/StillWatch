@@ -13,7 +13,7 @@
 
 The agent changed 3 files, ran 7 commands, and read 9 files, with help from 2 subagents.
 It stopped before finishing "Deployment notes".
-Stillwatch flagged 3 findings, including CI workflow changed; Git hook added.
+Stillwatch flagged 3 findings, including CI workflow changed; Git hook added, plus 1 low-severity item.
 
 ## Why this is high risk
 

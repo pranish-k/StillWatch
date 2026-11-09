@@ -94,10 +94,12 @@ export function findingsSentence(notable: readonly Finding[], low: readonly Find
     if (low.length === 0) return 'No rule flagged anything in this session.';
     return `Stillwatch noted ${countOf(low.length, 'low-severity item')} and nothing more serious.`;
   }
-  if (second === undefined) return `Stillwatch flagged one finding: ${titleOf(first, 100)}.`;
+  // Name the low-severity count too, so the sentence matches the session's finding total.
+  const plus = low.length > 0 ? `, plus ${countOf(low.length, 'low-severity item')}` : '';
+  if (second === undefined) return `Stillwatch flagged one finding: ${titleOf(first, 100)}${plus}.`;
   const two = `${titleOf(first, 80)}; ${titleOf(second, 80)}`;
-  if (notable.length === 2) return `Stillwatch flagged two findings: ${two}.`;
-  return `Stillwatch flagged ${countOf(notable.length, 'finding')}, including ${two}.`;
+  if (notable.length === 2) return `Stillwatch flagged two findings: ${two}${plus}.`;
+  return `Stillwatch flagged ${countOf(notable.length, 'finding')}, including ${two}${plus}.`;
 }
 
 /** A sentence about missing data, or null when nothing important is missing. */
@@ -116,7 +118,9 @@ const LIST_SUMMARY_MAX = 240;
 /** One to three short sentences for the session list. Deterministic, at most 240 characters. */
 export function summarizeSession(input: SummaryInput): string {
   const sentences: string[] = [];
-  const changed = input.fileChanges.length;
+  const changed = input.fileChanges.filter(
+    (f) => f.attribution === 'tool' || f.attribution === 'shell',
+  ).length;
   const commands = input.stats?.commands ?? 0;
   const reads = input.stats?.filesRead ?? 0;
   const activity: string[] = [];

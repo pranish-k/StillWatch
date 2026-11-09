@@ -23,6 +23,20 @@ function input(over: Partial<SummaryInput> = {}): SummaryInput {
 }
 
 describe('summarizeSession', () => {
+  it("counts only changes the session explains as the agent's", () => {
+    const out = summarizeSession(
+      input({
+        stats: stats({ commands: 1 }),
+        fileChanges: [
+          fileChange('a.ts', { attribution: 'shell' }),
+          fileChange('stray.txt', { attribution: 'unattributed' }),
+          fileChange('other.ts', { attribution: 'other_session' }),
+        ],
+      }),
+    );
+    expect(out).toMatch(/^Changed 1 file and ran 1 command\./);
+  });
+
   it('summarizes activity and notable findings', () => {
     expect(summarizeSession(input({ stats: stats({ commands: 12 }) }))).toBe(
       'Changed 5 files and ran 12 commands.',

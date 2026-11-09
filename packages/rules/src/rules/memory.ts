@@ -30,7 +30,7 @@ export const noteWritten: RuleFn = (ctx) =>
           : `Memory note ${verb(c)}`,
       reason:
         concerns.length > 0
-          ? `${base} The new content contains ${concerns.join(', ')} aimed at a later session.`
+          ? `${base} The new content contains ${listJoin(concerns)} aimed at a later session.`
           : base,
     });
   });
@@ -52,3 +52,9 @@ export const noteLoaded: RuleFn = (ctx) => {
   }
   return out;
 };
+
+/** "a", "a and b", "a, b, and c". */
+function listJoin(items: readonly string[]): string {
+  if (items.length <= 2) return items.join(' and ');
+  return `${items.slice(0, -1).join(', ')}, and ${items.at(-1) ?? ''}`;
+}

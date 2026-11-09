@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { adaptClaudeRecord, type SpoolRecord } from '../src/index';
+import { boundedJson } from '../src/json';
 import { loadRealFixture } from './helpers';
 
 describe('performance', () => {
@@ -22,5 +23,14 @@ describe('performance', () => {
     const elapsed = performance.now() - started;
     expect(ok).toBe(10_000);
     expect(elapsed).toBeLessThan(500);
+  });
+});
+
+describe('boundedJson performance', () => {
+  it('bounds serialization of 100,000 values in under 50 ms', () => {
+    const big = Array.from({ length: 100_000 }, (_, i) => ({ i, s: 'x'.repeat(50) }));
+    const started = performance.now();
+    boundedJson(big, 200);
+    expect(performance.now() - started).toBeLessThan(50);
   });
 });

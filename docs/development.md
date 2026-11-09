@@ -34,7 +34,8 @@ pnpm check
 | Command | What it does |
 | --- | --- |
 | `pnpm check` | Format check, lint, typecheck, and tests; must pass before every commit |
-| `pnpm test` | All tests |
+| `pnpm test` | All tests: the parallel suite, then the performance budgets alone |
+| `pnpm test:perf` | Only the performance budget tests |
 | `pnpm vitest run packages/<name>` | One package's tests |
 | `pnpm lint` | ESLint with strict type-checked rules |
 | `pnpm typecheck` | TypeScript in every package |
@@ -45,6 +46,8 @@ pnpm check
 ## Testing rules
 
 - Tests sit next to the code as `*.test.ts`, or in a package's `test/` directory.
+- Tests that assert a wall-clock budget are named `*.perf.test.ts` and live in a `test/` directory.
+  They run one file at a time after the parallel suite, so other tests cannot slow them down and make them flaky.
 - Tests set `HOME` and `STILLWATCH_HOME` to temporary directories and never touch real settings, crontab, or network.
 - Never write a literal real-looking secret; build fake secrets at runtime by concatenation, so secret scanners do not flag the repository.
 - Add a fixture whenever a parser or rule bug is fixed.

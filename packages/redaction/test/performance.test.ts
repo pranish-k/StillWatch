@@ -28,8 +28,10 @@ describe('performance', () => {
     ['repeated scheme', 'a://a:'.repeat(MB / 6)],
     ['repeated Authorization', 'Authorization: Bearer '.repeat(MB / 22)],
     ['random base64ish words', (randomish(40) + ' ').repeat(MB / 41)],
-  ])('redacts 1 MB of %s in under 250 ms', (_name, text) => {
-    expect(timed(() => r.redactString(text))).toBeLessThan(250);
+  ])('redacts 1 MB of %s in under 1 s', (_name, text) => {
+    // Guards against super-linear backtracking, which takes seconds to minutes
+    // on 1 MB. Typical runs take 100-300 ms; the margin absorbs a loaded machine.
+    expect(timed(() => r.redactString(text))).toBeLessThan(1000);
   });
 
   it('redacts 10,000 typical short strings in under 100 ms', () => {

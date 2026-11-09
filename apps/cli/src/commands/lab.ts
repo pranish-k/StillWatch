@@ -21,13 +21,19 @@ export async function labCommand(ctx: Ctx, args: string[]): Promise<number> {
   }
   const json = values.json === true;
   deps.storage.installSqliteWarningFilter();
+  const total = scenarios.length > 0 ? scenarios.length : deps.lab.listScenarios().length;
+  if (!json)
+    ctx.err(
+      `Running ${total} lab ${total === 1 ? 'scenario' : 'scenarios'} in temporary directories...`,
+    );
   const card = await deps.lab.runLab({
     ...(scenarios.length > 0 ? { scenarios } : {}),
     keepTemp: values.keep === true,
     log: (line) => {
-      if (!json) ctx.err(line);
+      if (!json) ctx.err(`  ${line}`);
     },
   });
+  if (!json) ctx.err('');
   if (json) ctx.out(JSON.stringify(card, null, 2));
   else ctx.out(deps.lab.renderScorecard(card, { color: ctx.color }));
   const failed =

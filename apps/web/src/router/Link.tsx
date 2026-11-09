@@ -8,9 +8,7 @@ type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
 };
 
 function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
-  return (
-    event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
-  );
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
 /** A real anchor that navigates in place on a plain click. */

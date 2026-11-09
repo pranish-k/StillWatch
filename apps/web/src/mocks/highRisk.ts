@@ -63,7 +63,12 @@ export function buildHighRisk(now: number): MockSession {
   b.task('task.created', 'Fix session expiry');
   b.search('SESSION_TTL');
   b.search('**/auth/**/*.ts', 'Glob');
-  for (const f of ['src/auth/session.ts', 'src/auth/login.ts', 'src/auth/cookies.ts', 'src/config.ts']) {
+  for (const f of [
+    'src/auth/session.ts',
+    'src/auth/login.ts',
+    'src/auth/cookies.ts',
+    'src/config.ts',
+  ]) {
     b.read(p(f), `export const SESSION_TTL = 5 * 60; // ${SCRIPT_TAG}`);
   }
   b.batch(['Read', 'Read', 'Read', 'Read']);
@@ -92,9 +97,7 @@ export function buildHighRisk(now: number): MockSession {
   });
   b.edit(p('src/auth/refresh.ts'), 'ttl: 300', 'ttl: SESSION_TTL');
   b.bash('pnpm test tests/auth', ' Tests  14 passed (14)');
-  b.webFetch(`https://api.example.com/v2/sessions?token=${GH_MARKER}`, [
-    fid('network.new_domain'),
-  ]);
+  b.webFetch(`https://api.example.com/v2/sessions?token=${GH_MARKER}`, [fid('network.new_domain')]);
   const npm = b.bash('pnpm add -D timekeeper@2.3.1', '+ timekeeper 2.3.1', {
     findingIds: [fid('package.new')],
     facts: {
@@ -107,7 +110,10 @@ export function buildHighRisk(now: number): MockSession {
   b.stop('The timeout is now 30 minutes and the auth tests pass.');
 
   // A background task reports back.
-  b.prompt('<task-notification>Background lint run finished: 0 problems</task-notification>', 'task_notification');
+  b.prompt(
+    '<task-notification>Background lint run finished: 0 problems</task-notification>',
+    'task_notification',
+  );
   b.stop('Lint is clean.');
 
   // Turn 2: deployment notes. The agent goes further than asked.
@@ -307,8 +313,16 @@ export function buildHighRisk(now: number): MockSession {
         classes: ['git_hook'],
       },
       { ...fc('NOTES.md', 'modified', 3, 0), classes: ['memory_note'] },
-      { ...fc('package.json', 'modified', 1, 0), attribution: 'shell', classes: ['task_runner', 'package_manifest'] },
-      { ...fc('pnpm-lock.yaml', 'modified', 18, 2), attribution: 'shell', classes: ['package_manifest'] },
+      {
+        ...fc('package.json', 'modified', 1, 0),
+        attribution: 'shell',
+        classes: ['task_runner', 'package_manifest'],
+      },
+      {
+        ...fc('pnpm-lock.yaml', 'modified', 18, 2),
+        attribution: 'shell',
+        classes: ['package_manifest'],
+      },
       {
         ...fc(LONG_PATH.slice(ROOT.length + 1), 'modified', 1, 1),
         path: LONG_PATH,
@@ -371,7 +385,8 @@ export function buildHighRisk(now: number): MockSession {
         severity: 'warning',
         startedAt: null,
         endedAt: null,
-        reason: 'No end snapshot: the session was interrupted, so the latest state is from the last sweep.',
+        reason:
+          'No end snapshot: the session was interrupted, so the latest state is from the last sweep.',
         createdAt: now,
       },
     ],
@@ -395,14 +410,29 @@ export function buildHighRisk(now: number): MockSession {
     ],
     unfinished: [
       { kind: 'task', label: 'Deployment notes', eventId: null },
-      { kind: 'tool_call', label: 'Bash: pnpm run build', eventId: events[events.length - 1]?.id ?? null },
+      {
+        kind: 'tool_call',
+        label: 'Bash: pnpm run build',
+        eventId: events[events.length - 1]?.id ?? null,
+      },
       { kind: 'turn', label: 'Continue with the deployment notes.', eventId: null },
     ],
     sensitiveAccess: [
-      { path: p('.env.test'), op: 'read', eventId: envRead.id, ts: envRead.ts, classes: ['secret'] },
+      {
+        path: p('.env.test'),
+        op: 'read',
+        eventId: envRead.id,
+        ts: envRead.ts,
+        classes: ['secret'],
+      },
     ],
     subagents: [
-      { id: explore, type: 'Explore', lastMessage: 'Found 3 places that set the timeout.', eventCount: 18 },
+      {
+        id: explore,
+        type: 'Explore',
+        lastMessage: 'Found 3 places that set the timeout.',
+        eventCount: 18,
+      },
       {
         id: drafter,
         type: 'general-purpose',

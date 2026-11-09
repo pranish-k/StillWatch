@@ -124,7 +124,7 @@ export class TimelineBuilder {
     const facts: EventFacts = { ...emptyFacts(1), ...extra.facts };
     const tool = extra.tool ?? null;
     const redactions: Redaction[] = [];
-    redactionsIn(payload.data as JsonValue, '/data', redactions);
+    redactionsIn(payload.data, '/data', redactions);
     if (tool) {
       redactionsIn(tool.input, '/tool/input', redactions);
       if (tool.response !== null) redactionsIn(tool.response, '/tool/response', redactions);
@@ -301,12 +301,7 @@ export class TimelineBuilder {
     return this;
   }
 
-  private tool(
-    name: string,
-    category: ToolCategory,
-    summary: string,
-    o: ToolOptions,
-  ): EventView {
+  private tool(name: string, category: ToolCategory, summary: string, o: ToolOptions): EventView {
     this.callN++;
     const useId = `toolu_${this.idPrefix}${this.callN}`;
     const base: ToolCall = {
@@ -405,7 +400,9 @@ export class TimelineBuilder {
       input: { file_path: path, old_string: oldText, new_string: newText },
       response: { filePath: path, structuredPatch: [{ oldStart: 12, newStart: 12, lines: 4 }] },
       filePath: path,
-      facts: { files: [{ path, op: 'write', via: 'tool', detail: 'Edit tool', unresolved: false }] },
+      facts: {
+        files: [{ path, op: 'write', via: 'tool', detail: 'Edit tool', unresolved: false }],
+      },
       findingIds,
     });
   }
@@ -493,9 +490,14 @@ export class TimelineBuilder {
       runInBackground: false,
       changedFiles: [],
     };
-    this.push({ kind: 'tool.pre', data: {} }, 'PreToolUse', `Delegated to ${type}: ${description}`, {
-      tool,
-    });
+    this.push(
+      { kind: 'tool.pre', data: {} },
+      'PreToolUse',
+      `Delegated to ${type}: ${description}`,
+      {
+        tool,
+      },
+    );
     const started = this.t;
     const id = this.subagent(type, body);
     this.push({ kind: 'tool.post', data: {} }, 'PostToolUse', `${type} subagent returned`, {

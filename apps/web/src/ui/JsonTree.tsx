@@ -83,7 +83,15 @@ const Node = memo(function Node({
 export function JsonTree({ value, label }: { value: JsonValue; label: string }) {
   return (
     <div className="json-tree mono" role="group" aria-label={label}>
-      <Node name={null} value={value} depth={0} />
+      {value !== null && typeof value === 'object' && Object.keys(value).length > 0 ? (
+        // Show the top level open, without a wrapper row for the root itself.
+        (Array.isArray(value)
+          ? value.map((v, i) => [String(i), v] as const)
+          : Object.entries(value)
+        ).map(([k, v]) => <Node key={k} name={k} value={v} depth={1} />)
+      ) : (
+        <Node name={null} value={value} depth={0} />
+      )}
     </div>
   );
 }

@@ -141,7 +141,8 @@ export function createApiClient(options: { fetch: FetchLike; auth: AuthStore }):
     status: (signal) => json<StatusResponse>('GET', '/api/status', { signal }),
     listSessions: (query, signal) =>
       json<SessionListResponse>('GET', `/api/sessions${sessionListSearch(query)}`, { signal }),
-    session: (id, signal) => json<SessionDetailResponse>('GET', `/api/sessions/${enc(id)}`, { signal }),
+    session: (id, signal) =>
+      json<SessionDetailResponse>('GET', `/api/sessions/${enc(id)}`, { signal }),
     events(sessionId, cursor, signal) {
       const params = new URLSearchParams({ limit: String(EVENTS_PAGE_SIZE) });
       if (cursor !== null) params.set('cursor', cursor);
@@ -154,7 +155,10 @@ export function createApiClient(options: { fetch: FetchLike; auth: AuthStore }):
       const response = await send('GET', `/api/sessions/${enc(id)}/report.md`);
       const text = await response.text();
       const fallback = `stillwatch-session-${id.replace(/[^\w-]/g, '').slice(0, 40)}.md`;
-      return { text, filename: filenameFrom(response.headers.get('Content-Disposition'), fallback) };
+      return {
+        text,
+        filename: filenameFrom(response.headers.get('Content-Disposition'), fallback),
+      };
     },
     reanalyze: (id) => json<OkResponse>('POST', `/api/sessions/${enc(id)}/reanalyze`),
     deleteSession: (id) => json<OkResponse>('DELETE', `/api/sessions/${enc(id)}`),

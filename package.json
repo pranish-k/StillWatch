@@ -2,6 +2,7 @@
   "name": "stillwatch-monorepo",
   "version": "0.0.0",
   "private": true,
+  "license": "MIT",
   "description": "Stillwatch: a local flight recorder for coding agents.",
   "type": "module",
   "packageManager": "pnpm@12.16.1",

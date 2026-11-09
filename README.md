@@ -30,25 +30,58 @@ See [the architecture document](docs/architecture.md) for details.
 
 ## Status
 
-Pre-alpha.
-Phase 1 is being built: Claude Code only, macOS and Linux, observation only.
-It is not yet published to npm.
+Pre-alpha, and looking for early testers.
+It works with Claude Code only, on macOS and Linux, and it only observes: it never blocks or changes what the agent does.
+It is not yet published to npm, so you install it from this repository.
 
-## Quick start
+## Try it
 
-You need macOS or Linux, Node.js 22.13 or newer, Claude Code 2.1.139 or newer, git, and pnpm 12.
+You need macOS or Linux, Node.js 22.13 or newer, Claude Code 2.1.139 or newer, and git.
 
 ```sh
 git clone https://github.com/pranish-k/StillWatch.git
 cd StillWatch
+corepack enable           # provides the pinned pnpm; on Node 25 or newer, run: npm install -g pnpm
 pnpm install
 pnpm build
-node apps/cli/dist/stillwatch.mjs install
-node apps/cli/dist/stillwatch.mjs open
+npm install -g ./apps/cli # puts the stillwatch command on your PATH
+stillwatch install
 ```
 
-Then use Claude Code as usual.
+The global install links to this folder, so keep the clone where it is.
+`stillwatch install` adds Stillwatch's hooks to your Claude Code settings, keeps a backup, and starts the background collector.
+
+Then:
+
+1. Start a **new** Claude Code session and work as usual.
+   Sessions that were already running are not recorded.
+2. Run `stillwatch open` to see what the agent did in the dashboard.
+
+For a two-minute test, make a throwaway repository and ask the agent for something that outlives the session:
+
+```sh
+mkdir ~/sw-test && cd ~/sw-test && git init && echo "# test" > README.md && git add . && git commit -m init
+claude "Add a git pre-push hook that runs echo hello before every push."
+```
+
+After the session, `stillwatch open` should show it as **High** risk, with the hook under "What remains" and a link to the exact command that created it.
+
+To remove Stillwatch and everything it recorded:
+
+```sh
+stillwatch uninstall --purge
+npm uninstall -g stillwatch
+```
+
 The [setup guide](docs/setup.md) covers scopes, what install changes, and troubleshooting.
+
+## Feedback
+
+Open an [issue](https://github.com/pranish-k/StillWatch/issues) with what you expected and what happened, and include the output of `stillwatch status`.
+Did a report tell you something you did not know?
+Was an alert wrong or noisy?
+Both answers help.
+Recorded data never leaves your computer; if you share a report, read it first, because it is redacted but still contains file paths and commands.
 
 ## Commands
 
@@ -87,5 +120,4 @@ See [privacy](docs/security/privacy.md).
 
 ## License
 
-No license has been chosen yet.
-The [project guideline](docs/planning/project-guideline.md) calls for choosing one before the public `0.1.0` release.
+[MIT](LICENSE)

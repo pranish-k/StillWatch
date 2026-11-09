@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PipelineOptions } from '@stillwatch/collector';
 import {
@@ -85,7 +85,17 @@ export function fakeDeps(
         new Set(run.imported.map((r) => String(r.payload.session_id)));
       const pipeline: LabPipeline = {
         importOnce: async () => {
-          const names = (await readdir(spoolNew)).sort();
+          // Same order as the real importer: modification time (ns), then name.
+          const entries = await Promise.all(
+            (await readdir(spoolNew)).map(async (name) => ({
+              name,
+              mtimeNs: (await stat(join(spoolNew, name), { bigint: true })).mtimeNs,
+            })),
+          );
+          entries.sort((a, b) =>
+            a.mtimeNs !== b.mtimeNs ? (a.mtimeNs < b.mtimeNs ? -1 : 1) : a.name < b.name ? -1 : 1,
+          );
+          const names = entries.map((e) => e.name);
           for (const file of names) {
             const parsed: unknown = JSON.parse(await readFile(join(spoolNew, file), 'utf8'));
             if (!isRecord(parsed)) throw new Error('bad record');
@@ -111,8 +121,7 @@ export function fakeDeps(
         },
         close: () => Promise.resolve(),
         store: {
-          getSession: (id) =>
-            sessionIds().has(id) ? ({ id } as unknown as SessionRecord) : null,
+          getSession: (id) => (sessionIds().has(id) ? ({ id } as unknown as SessionRecord) : null),
           getSessionDetail: (id) => {
             if (!sessionIds().has(id)) return null;
             const list: Finding[] = findings(id, run).map((f) => ({

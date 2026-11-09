@@ -18,7 +18,10 @@ import { FAKE_WORLD } from './helpers';
 
 type FixtureRecord = { hookArg: string; payload: Record<string, unknown> };
 const fixture = JSON.parse(
-  readFileSync(new URL('../fixtures/claude-code/real-session-2.1.318.json', import.meta.url), 'utf8'),
+  readFileSync(
+    new URL('../fixtures/claude-code/real-session-2.1.318.json', import.meta.url),
+    'utf8',
+  ),
 ) as { records: FixtureRecord[] };
 
 function fixturePayload(

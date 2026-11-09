@@ -27,7 +27,8 @@ describe('scenario definitions', () => {
     expect(list.filter((s) => s.category === 'attack')).toHaveLength(12);
     expect(list.filter((s) => s.category === 'normal')).toHaveLength(3);
     expect(new Set(list.map((s) => s.id)).size).toBe(list.length);
-    for (const s of list) expect(Object.keys(s).sort()).toEqual(['category', 'description', 'id', 'title']);
+    for (const s of list)
+      expect(Object.keys(s).sort()).toEqual(['category', 'description', 'id', 'title']);
   });
 
   it.each(SCENARIOS.map((s) => [s.id, s] as const))('%s is well formed', (_id, s) => {
@@ -47,7 +48,10 @@ describe('scenario definitions', () => {
     for (const step of plan.steps) {
       if (step.kind === 'hook') expect(step.event).toBe(step.payload.hook_event_name);
     }
-    for (const effect of [...plan.setup, ...plan.steps.flatMap((x) => (x.kind === 'effect' ? [x.effect] : []))]) {
+    for (const effect of [
+      ...plan.setup,
+      ...plan.steps.flatMap((x) => (x.kind === 'effect' ? [x.effect] : [])),
+    ]) {
       for (const p of effectPaths(effect)) expect(isWithin(p, FAKE_WORLD.root)).toBe(true);
     }
     expect(plan.steps.at(-1)?.kind).toMatch(/^(import|sweep)$/);
@@ -103,7 +107,11 @@ function expectedFindings(all: readonly Scenario[]) {
 describe('runner with a fake collector', () => {
   it('runs every scenario through the hook script, effects, and imports', async () => {
     const runs: FakeRun[] = [];
-    const card = await runScenarios([...SCENARIOS], {}, fakeDeps(expectedFindings(SCENARIOS), runs));
+    const card = await runScenarios(
+      [...SCENARIOS],
+      {},
+      fakeDeps(expectedFindings(SCENARIOS), runs),
+    );
     expect(card.results.filter((r) => r.status === 'error')).toEqual([]);
     expect(card).toMatchObject({
       attacksDetected: 12,
@@ -113,10 +121,15 @@ describe('runner with a fake collector', () => {
       errors: 0,
     });
     expect(renderScorecard(card)).toContain('Attacks detected 12/12, normal sessions quiet 3/3');
-    for (const run of runs) {
+    // Scenarios run one at a time, in order, so runs line up with SCENARIOS.
+    expect(runs).toHaveLength(SCENARIOS.length);
+    for (const [i, run] of runs.entries()) {
       expect(run.options.includeSystemSurface).toBe(false);
       expect(run.options.userHome).toBe(join(run.options.stillwatchHome, '..'));
-      expect(run.imported.length).toBeGreaterThan(5);
+      const plan = SCENARIOS[i]?.build(FAKE_WORLD);
+      expect(run.imported.map((r) => r.payload.hook_event_name)).toEqual(
+        hooks(plan?.steps ?? []).map((p) => p.hook_event_name),
+      );
     }
     for (const run of runs) await expect(stat(run.options.stillwatchHome)).rejects.toThrow();
   }, 60_000);
@@ -125,7 +138,11 @@ describe('runner with a fake collector', () => {
     const runs: FakeRun[] = [];
     const lines: string[] = [];
     const s = scenario('interrupted-session');
-    const res = await runScenario(s, { keepTemp: true, log: (l) => lines.push(l) }, fakeDeps(() => [], runs));
+    const res = await runScenario(
+      s,
+      { keepTemp: true, log: (l) => lines.push(l) },
+      fakeDeps(() => [], runs),
+    );
     const run = runs[0]!;
     const root = join(run.options.stillwatchHome, '..', '..');
     try {
@@ -151,7 +168,11 @@ describe('runner with a fake collector', () => {
   it('plants real files: the git hook, the plist, the profile line, and the config edit', async () => {
     const check = async (id: string, rel: string, test: (text: string) => void): Promise<void> => {
       const runs: FakeRun[] = [];
-      await runScenario(scenario(id), { keepTemp: true }, fakeDeps(() => [], runs));
+      await runScenario(
+        scenario(id),
+        { keepTemp: true },
+        fakeDeps(() => [], runs),
+      );
       const home = join(runs[0]!.options.stillwatchHome, '..');
       try {
         test(await readFile(join(home, rel), 'utf8'));
@@ -173,12 +194,16 @@ describe('runner with a fake collector', () => {
 
   it('reports an error with a note when the collector fails', async () => {
     const deps = fakeDeps(() => []);
-    const res = await runScenario(scenario('normal-edit'), {}, {
-      ...deps,
-      renderHookScript: () => {
-        throw new Error('not implemented: renderHookScript');
+    const res = await runScenario(
+      scenario('normal-edit'),
+      {},
+      {
+        ...deps,
+        renderHookScript: () => {
+          throw new Error('not implemented: renderHookScript');
+        },
       },
-    });
+    );
     expect(res).toMatchObject({ status: 'error', note: 'not implemented: renderHookScript' });
   });
 });

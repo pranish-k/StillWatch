@@ -149,13 +149,15 @@ describe('scorecard', () => {
     expect(plain).not.toContain('\u001b[');
     const colored = renderScorecardText(card, { color: true });
     expect(colored).toContain('\u001b[33mERROR\u001b[0m');
-    expect(colored.replace(/\u001b\[[0-9;]*m/g, '')).toBe(plain);
+    const ansi = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
+    expect(colored.replace(ansi, '')).toBe(plain);
   });
 
   it('strips control characters from rendered text', () => {
     expect(terminalSafe('a\u001b[31mb\nc')).toBe('a?[31mb c');
     const card = tally(0, 1, [result('x', 'attack', 'error', 'bad\u001b]0;title\u0007')]);
-    expect(renderScorecardText(card, { color: false })).not.toMatch(/\u001b|\u0007/);
+    const text = renderScorecardText(card, { color: false });
+    expect(text.includes('\u001b') || text.includes('\u0007')).toBe(false);
   });
 
   it('formats durations', () => {

@@ -77,7 +77,7 @@ export async function openStoreIfExists(
   const path = stillwatchPaths(home).db;
   if (!(await exists(path))) return null;
   ctx.deps.storage.installSqliteWarningFilter();
-  return ctx.deps.storage.openStore({ path, readonly, now: ctx.deps.now });
+  return ctx.deps.storage.openStore({ path, readonly, now: () => ctx.deps.now() });
 }
 
 function listQuery(sort: SessionListQuery['sort'], limit: number, cursor: string | null) {

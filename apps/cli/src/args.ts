@@ -3,11 +3,11 @@ import { parseArgs } from 'node:util';
 /** Bad command-line usage; exits 2. */
 export class UsageError extends Error {
   override name = 'UsageError';
-  constructor(
-    message: string,
-    readonly command: string | null,
-  ) {
+  readonly command: string | null;
+
+  constructor(message: string, command: string | null) {
     super(message);
+    this.command = command;
   }
 }
 
@@ -47,6 +47,7 @@ function friendlyParseError(error: unknown): string {
         : `option ${option} needs a value`;
     case 'ERR_PARSE_ARGS_UNEXPECTED_POSITIONAL':
       return `unexpected argument '${quoted}'`;
+    case undefined:
     default:
       return error.message;
   }
@@ -54,7 +55,8 @@ function friendlyParseError(error: unknown): string {
 
 /** Parses a positive integer option value. */
 export function positiveInt(command: string, name: string, value: string, max: number): number {
-  if (!/^\d+$/.test(value)) throw new UsageError(`--${name} must be a positive whole number`, command);
+  if (!/^\d+$/.test(value))
+    throw new UsageError(`--${name} must be a positive whole number`, command);
   const n = Number.parseInt(value, 10);
   if (n < 1 || n > max) throw new UsageError(`--${name} must be between 1 and ${max}`, command);
   return n;

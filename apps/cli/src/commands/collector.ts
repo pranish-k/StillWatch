@@ -37,7 +37,9 @@ export async function collectorCommand(ctx: Ctx, args: string[]): Promise<number
   const { positionals } = parse('collector', args, {}, true);
   if (positionals.length !== 1 || positionals[0] !== 'run') {
     throw new UsageError(
-      positionals.length === 0 ? 'missing subcommand: run' : `unknown subcommand '${positionals.join(' ')}'`,
+      positionals.length === 0
+        ? 'missing subcommand: run'
+        : `unknown subcommand '${positionals.join(' ')}'`,
       'collector',
     );
   }

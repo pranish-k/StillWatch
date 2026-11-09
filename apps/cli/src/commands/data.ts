@@ -56,10 +56,14 @@ export async function sessionsCommand(ctx: Ctx, args: string[]): Promise<number>
     json: { type: 'boolean' },
     limit: { type: 'string' },
   });
-  const limit = values.limit === undefined ? 20 : positiveInt('sessions', 'limit', values.limit, 200);
+  const limit =
+    values.limit === undefined ? 20 : positiveInt('sessions', 'limit', values.limit, 200);
   const empty: SessionListResponse = { sessions: [], nextCursor: null, total: 0 };
-  const list = await withStore(ctx, true, () => empty, (store) =>
-    store.listSessions(sessionQuery(limit)),
+  const list = await withStore(
+    ctx,
+    true,
+    () => empty,
+    (store) => store.listSessions(sessionQuery(limit)),
   );
   if (values.json === true) {
     ctx.out(JSON.stringify(list, null, 2));
@@ -133,7 +137,11 @@ export async function deleteDataCommand(ctx: Ctx, args: string[]): Promise<numbe
     all: { type: 'boolean' },
     yes: { type: 'boolean' },
   });
-  const selected = [values.session !== undefined, values['older-than'] !== undefined, values.all === true];
+  const selected = [
+    values.session !== undefined,
+    values['older-than'] !== undefined,
+    values.all === true,
+  ];
   if (selected.filter(Boolean).length !== 1) {
     throw new UsageError('choose exactly one of --session, --older-than, or --all', 'delete-data');
   }
@@ -156,7 +164,8 @@ export async function deleteDataCommand(ctx: Ctx, args: string[]): Promise<numbe
       if (values.session !== undefined) {
         const id = resolveSessionId(store, values.session);
         const session = store.getSession(id);
-        const title = session?.title != null ? ` (${truncate(clean(session.title), 60)})` : '';
+        const sessionTitle = session?.title ?? null;
+        const title = sessionTitle !== null ? ` (${truncate(clean(sessionTitle), 60)})` : '';
         if (!(await confirm(ctx, `Delete session ${clean(id)}${title}?`, yes, 'delete data'))) {
           ctx.out('Cancelled.');
           return 1;
@@ -195,7 +204,7 @@ async function clearSpool(home: string): Promise<number> {
   const paths = stillwatchPaths(home);
   let count = 0;
   for (const dir of [paths.spoolNew, paths.spoolTmp]) {
-    let names: string[] = [];
+    let names: string[];
     try {
       names = await readdir(dir);
     } catch {

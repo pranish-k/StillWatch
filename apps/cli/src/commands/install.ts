@@ -1,7 +1,7 @@
 import { readdir, rm, rmdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { CLAUDE_HOOK_EVENTS, MIN_CLAUDE_CODE_VERSION } from '@stillwatch/adapter-claude';
-import { CREATED_HOOKS_OBJECT, type SettingsLocation } from '@stillwatch/installer';
+import type { SettingsLocation } from '@stillwatch/installer';
 import {
   baseName,
   createDefaultConfig,
@@ -205,7 +205,9 @@ export async function installCommand(ctx: Ctx, args: string[]): Promise<number> 
   ctx.out('');
   ctx.out(s.bold('Next steps'));
   ctx.out('  1. Start a new Claude Code session. Sessions already running may not load the hooks.');
-  ctx.out("  2. Run 'stillwatch open' to review sessions, or 'stillwatch status' to check capture.");
+  ctx.out(
+    "  2. Run 'stillwatch open' to review sessions, or 'stillwatch status' to check capture.",
+  );
   return 0;
 }
 

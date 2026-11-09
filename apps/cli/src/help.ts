@@ -2,7 +2,8 @@ type CommandHelp = { usage: string; summary: string; details: string[]; examples
 
 export const COMMAND_HELP: Record<string, CommandHelp> = {
   install: {
-    usage: 'stillwatch install [--scope user|project|local] [--project-dir <dir>] [--dry-run] [--force] [--no-start]',
+    usage:
+      'stillwatch install [--scope user|project|local] [--project-dir <dir>] [--dry-run] [--force] [--no-start]',
     summary: 'Add Stillwatch capture hooks to Claude Code settings.',
     details: [
       '--scope <scope>       user (default): ~/.claude/settings.json (honors CLAUDE_CONFIG_DIR)',
@@ -13,10 +14,15 @@ export const COMMAND_HELP: Record<string, CommandHelp> = {
       '--no-start            Do not start the background collector',
       'Your settings file is backed up first. Running install again is safe.',
     ],
-    examples: ['stillwatch install', 'stillwatch install --dry-run', 'stillwatch install --scope local'],
+    examples: [
+      'stillwatch install',
+      'stillwatch install --dry-run',
+      'stillwatch install --scope local',
+    ],
   },
   uninstall: {
-    usage: 'stillwatch uninstall [--scope user|project|local] [--project-dir <dir>] [--purge] [--yes]',
+    usage:
+      'stillwatch uninstall [--scope user|project|local] [--project-dir <dir>] [--purge] [--yes]',
     summary: 'Remove exactly the hooks Stillwatch added and stop the collector.',
     details: [
       '--scope <scope>       Settings file to clean (default: the one recorded at install)',
@@ -59,7 +65,10 @@ export const COMMAND_HELP: Record<string, CommandHelp> = {
   sessions: {
     usage: 'stillwatch sessions [--json] [--limit <n>]',
     summary: 'List recorded sessions, riskiest first.',
-    details: ['--json        Print machine-readable output', '--limit <n>   Sessions to show (default 20, max 200)'],
+    details: [
+      '--json        Print machine-readable output',
+      '--limit <n>   Sessions to show (default 20, max 200)',
+    ],
     examples: ['stillwatch sessions', 'stillwatch sessions --limit 50 --json'],
   },
   report: {

@@ -61,7 +61,11 @@ export function unifiedDiff(before: string, after: string, context = 3): string[
   const changed = ops.map((op) => op.kind !== ' ');
   if (!changed.includes(true)) return [];
   const keep = ops.map((_, index) => {
-    for (let k = Math.max(0, index - context); k <= Math.min(ops.length - 1, index + context); k++) {
+    for (
+      let k = Math.max(0, index - context);
+      k <= Math.min(ops.length - 1, index + context);
+      k++
+    ) {
       if (changed[k]) return true;
     }
     return false;

@@ -27,8 +27,9 @@ function commands(ctx: RuleContext): { event: StoredEvent; command: CommandFact 
 }
 
 /** `git config` keys a command sets. */
-function label(l: string | null): string {
-  return l === null ? '' : ` (${l})`;
+/** A catalog label in parentheses, unless it only repeats `noun`. */
+function label(l: string | null, noun = ''): string {
+  return l === null || l.toLowerCase() === noun ? '' : ` (${l})`;
 }
 
 export const gitHook: RuleFn = (ctx) => {
@@ -37,7 +38,7 @@ export const gitHook: RuleFn = (ctx) => {
       ruleId: 'persistence.git_hook',
       severity: 'high',
       title: `Git hook ${verb(c)}`,
-      reason: `${show(ctx, c.path)} is a git hook${label(c.label)} and was ${verb(c)}. Git runs hooks automatically during commits and other operations, so it keeps running code after this session.`,
+      reason: `${show(ctx, c.path)} is a git hook${label(c.label, 'git hook')} and was ${verb(c)}. Git runs hooks automatically during commits and other operations, so it keeps running code after this session.`,
     }),
   );
   const events: StoredEvent[] = [];

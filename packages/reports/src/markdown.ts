@@ -194,10 +194,13 @@ export function renderMarkdownReport(report: SessionReport): string {
   section(
     'What remains',
     capped(report.whatRemains, CAP.remains, 'item', (item) => {
-      const detail = item.detail === null ? '' : `: ${mdText(item.detail, 500)}`;
-      return [
-        `- ${mdCode(item.display)} (${artifactKindLabel(item.kind)}, ${artifactChangeLabel(item.change)})${detail}`,
-      ];
+      const kind = artifactKindLabel(item.kind);
+      // Skip a catalog label that only repeats the kind ("git hook" and "Git hook").
+      const detail =
+        item.detail === null || item.detail.toLowerCase() === kind.toLowerCase()
+          ? ''
+          : `: ${mdText(item.detail, 500)}`;
+      return [`- ${mdCode(item.display)} (${kind}, ${artifactChangeLabel(item.change)})${detail}`];
     }),
   );
 

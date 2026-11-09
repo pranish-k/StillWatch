@@ -8,9 +8,15 @@ import {
   type StillwatchConfig,
 } from '@stillwatch/schema';
 import { parse } from '../args';
-import { detectClaude, errorMessage, isNpxCache, openStoreIfExists, stillwatchHome } from '../common';
+import {
+  detectClaude,
+  errorMessage,
+  isNpxCache,
+  openStoreIfExists,
+  stillwatchHome,
+} from '../common';
 import { exists } from '../fsutil';
-import { formatAgo, formatBytes, formatCount, plural, type Ctx } from '../output';
+import { formatAgo, formatBytes, plural, type Ctx } from '../output';
 import { VERSION } from '../version';
 
 export type StatusJson = {
@@ -76,7 +82,13 @@ export async function gatherStatus(ctx: Ctx): Promise<StatusJson> {
   }
 
   const spool = await spoolBacklog(paths.spoolNew);
-  const db: StatusJson['db'] = { path: paths.db, exists: false, sizeBytes: 0, sessions: 0, events: 0 };
+  const db: StatusJson['db'] = {
+    path: paths.db,
+    exists: false,
+    sizeBytes: 0,
+    sessions: 0,
+    events: 0,
+  };
   let lastEventAt: number | null = null;
   try {
     const store = await openStoreIfExists(ctx, home, true);
@@ -107,14 +119,18 @@ export async function gatherStatus(ctx: Ctx): Promise<StatusJson> {
       );
     }
     if (!hooks.hookScriptOk) {
-      warnings.push(`The hook script ${ctx.path(record.hookScript)} is missing or not Stillwatch's. Run 'stillwatch install' again.`);
+      warnings.push(
+        `The hook script ${ctx.path(record.hookScript)} is missing or not Stillwatch's. Run 'stillwatch install' again.`,
+      );
     }
     if (!(await exists(record.cliPath)) || !(await exists(record.nodePath))) {
       warnings.push(
         "The Node or CLI path recorded at install no longer exists, so the hook cannot start the collector. Run 'stillwatch install' again.",
       );
     } else if (isNpxCache(record.cliPath)) {
-      warnings.push('Installed from the npx cache, which npm may clean up. Install with: npm install -g stillwatch');
+      warnings.push(
+        'Installed from the npx cache, which npm may clean up. Install with: npm install -g stillwatch',
+      );
     }
   }
   if (hooks.claudeVersion === null) {
@@ -218,7 +234,9 @@ export async function statusCommand(ctx: Ctx, args: string[]): Promise<number> {
     ctx.out('Everything is ready. Start a Claude Code session to record it.');
   } else {
     ctx.out('');
-    ctx.out(`All good. ${formatCount(status.db.sessions)} sessions recorded; run 'stillwatch open' to review.`);
+    ctx.out(
+      `All good. ${plural(status.db.sessions, 'session')} recorded; run 'stillwatch open' to review.`,
+    );
   }
   return 0;
 }

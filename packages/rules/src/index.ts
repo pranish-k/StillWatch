@@ -6,7 +6,7 @@
  * id, and subject). Every finding explains itself in plain English and cites
  * its evidence. Every rule has a positive test and a normal-use test.
  *
- * Public API contract. Signatures are fixed; implementations replace the stubs.
+ * Public API contract. Signatures are fixed.
  */
 import type {
   AnalysisInput,
@@ -19,13 +19,33 @@ import type {
   SessionStatusResult,
   StoredEvent,
 } from '@stillwatch/schema';
+import { joinPath, pathKey } from '@stillwatch/schema';
+import { classifyPath } from '@stillwatch/facts';
+import { analyzeWith } from './analyze';
+import { RULE_DEFINITIONS } from './rules/definitions';
+import { riskOf } from './risk';
+import { sessionStatus } from './status';
 
 /** Metadata for every rule, one entry per RULE_IDS value. */
-export const RULES: readonly RuleDefinition[] = [];
+export const RULES: readonly RuleDefinition[] = RULE_DEFINITIONS;
 
 /** Runs every rule and derives everything the report needs for one session. */
-export function analyzeSession(_input: AnalysisInput): AnalysisResult {
-  throw new Error('not implemented: analyzeSession');
+export function analyzeSession(input: AnalysisInput): AnalysisResult {
+  const repoRoots: string[] = [];
+  for (const root of [
+    input.session.projectRoot,
+    ...(input.start?.repos ?? []).map((r) => r.root),
+    ...(input.end?.repos ?? []).map((r) => r.root),
+  ]) {
+    if (root !== null && !repoRoots.some((r) => pathKey(r) === pathKey(root))) repoRoots.push(root);
+  }
+  // AnalysisInput carries no Stillwatch data directory; the default location is assumed.
+  const context = {
+    home: input.home,
+    stillwatchHome: joinPath(input.home, '.stillwatch'),
+    repoRoots,
+  };
+  return analyzeWith(input, (path) => classifyPath(path, context));
 }
 
 export type StatusInput = {
@@ -51,8 +71,8 @@ export type StatusInput = {
  *   for `abandonAfterMs`.
  * - otherwise `active`.
  */
-export function deriveSessionStatus(_input: StatusInput): SessionStatusResult {
-  throw new Error('not implemented: deriveSessionStatus');
+export function deriveSessionStatus(input: StatusInput): SessionStatusResult {
+  return sessionStatus(input);
 }
 
 /**
@@ -61,8 +81,8 @@ export function deriveSessionStatus(_input: StatusInput): SessionStatusResult {
  * (and gaps) behind the level, highest first.
  */
 export function computeRisk(
-  _findings: Finding[],
-  _gaps: CaptureGap[],
+  findings: Finding[],
+  gaps: CaptureGap[],
 ): { risk: RiskLevel; reasons: string[] } {
-  throw new Error('not implemented: computeRisk');
+  return riskOf(findings, gaps);
 }

@@ -17,7 +17,7 @@
  * - Facts run on the redacted, untruncated event, so injection text deep in a
  *   long tool response is still seen.
  *
- * Public API contract. Signatures are fixed; implementations replace the stubs.
+ * Public API contract. Signatures are fixed.
  */
 import type {
   EventFacts,
@@ -27,6 +27,13 @@ import type {
   Signal,
   SurfaceSpec,
 } from '@stillwatch/schema';
+import { LIMITS } from '@stillwatch/schema';
+import { classify } from './catalog';
+import { extractFactsImpl } from './extract';
+import { findInjection } from './injection';
+import { parseCommandLine } from './shell/parser';
+import { buildPersistenceSurface, REPO_SURFACE } from './surface';
+import { extractUrls as findUrls, hostnameOf as urlHostname } from './urls';
 
 export type FactsContext = {
   /** The user's home directory. */
@@ -36,8 +43,8 @@ export type FactsContext = {
 };
 
 /** Extracts facts from one event. Sets `v` to FACTS_VERSION. */
-export function extractFacts(_event: NormalizedEvent, _context: FactsContext): EventFacts {
-  throw new Error('not implemented: extractFacts');
+export function extractFacts(event: NormalizedEvent, context: FactsContext): EventFacts {
+  return extractFactsImpl(event, context);
 }
 
 export type ClassifyContext = FactsContext & {
@@ -51,8 +58,8 @@ export type ClassifyContext = FactsContext & {
  * or match anywhere by name or suffix (e.g. .github/workflows/*.yml, CLAUDE.md).
  * Paths with no match return `{ classes: [], label: null, scope }`.
  */
-export function classifyPath(_path: string, _context: ClassifyContext): PathClassification {
-  throw new Error('not implemented: classifyPath');
+export function classifyPath(path: string, context: ClassifyContext): PathClassification {
+  return classify(path, context);
 }
 
 export type SurfaceContext = FactsContext & {
@@ -62,18 +69,18 @@ export type SurfaceContext = FactsContext & {
 };
 
 /** Home and system level persistence surface to snapshot at session start and end. */
-export function persistenceSurface(_context: SurfaceContext): SurfaceSpec[] {
-  throw new Error('not implemented: persistenceSurface');
+export function persistenceSurface(context: SurfaceContext): SurfaceSpec[] {
+  return buildPersistenceSurface(context);
 }
 
 /** Per-repository persistence surface (.git/hooks, .git/config, ignored agent files). */
 export function repoSurfaceSpecs(): RepoSurfaceSpec[] {
-  throw new Error('not implemented: repoSurfaceSpecs');
+  return REPO_SURFACE.map((spec) => ({ ...spec }));
 }
 
 /** Finds instruction-like text aimed at an agent, and hidden text, in untrusted content. */
-export function detectInjection(_text: string, _source: Signal['source']): Signal[] {
-  throw new Error('not implemented: detectInjection');
+export function detectInjection(text: string, source: Signal['source']): Signal[] {
+  return findInjection(text, source);
 }
 
 export type ShellRedirect = { op: string; target: string };
@@ -95,16 +102,29 @@ export type ShellCommand = {
 export type ShellParse = { commands: ShellCommand[]; truncated: boolean };
 
 /** Tokenizes and splits a shell command line. Exported for tests and tools. */
-export function parseShell(_command: string, _cwd: string | null, _home: string): ShellParse {
-  throw new Error('not implemented: parseShell');
+export function parseShell(command: string, cwd: string | null, home: string): ShellParse {
+  if (command.length > LIMITS.maxCommandParseLength) return { commands: [], truncated: true };
+  const parsed = parseCommandLine(command, cwd, home);
+  return {
+    commands: parsed.commands.map((c) => ({
+      argv: c.words.map((w) => w.value),
+      assignments: c.assignments.map((w) => w.value),
+      redirects: c.redirects.map((r) => ({ op: r.op, target: r.target.value })),
+      depth: c.depth,
+      background: c.background,
+      pipedFrom: c.pipedFrom,
+      cwd: c.cwd,
+    })),
+    truncated: parsed.truncated,
+  };
 }
 
 /** Finds http, https, ftp, ssh, and git URLs and scp-style host:path references in text. */
-export function extractUrls(_text: string): string[] {
-  throw new Error('not implemented: extractUrls');
+export function extractUrls(text: string): string[] {
+  return findUrls(text);
 }
 
 /** Lowercase hostname of a URL (no port, no credentials), or null. */
-export function hostnameOf(_url: string): string | null {
-  throw new Error('not implemented: hostnameOf');
+export function hostnameOf(url: string): string | null {
+  return urlHostname(url);
 }

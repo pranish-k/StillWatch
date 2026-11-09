@@ -1,5 +1,7 @@
 import type { StillwatchConfig } from '@stillwatch/schema';
 import type { Store } from '@stillwatch/storage';
+import { defaultDeps } from './deps';
+import { buildPipeline } from './pipeline-core';
 import type { Logger } from './types';
 
 export type PipelineOptions = {
@@ -48,6 +50,10 @@ export type Pipeline = {
   close(): Promise<void>;
 };
 
-export function createPipeline(_options: PipelineOptions): Promise<Pipeline> {
-  return Promise.reject(new Error('not implemented: createPipeline'));
+/**
+ * Opens the data directory, config, and database, and returns the import and
+ * analysis pipeline. Callers own it and must `close()` it.
+ */
+export function createPipeline(options: PipelineOptions): Promise<Pipeline> {
+  return buildPipeline(options, defaultDeps());
 }

@@ -18,6 +18,10 @@
  * Public API contract. Signatures are fixed; implementations replace the stubs.
  */
 import type { JsonValue, Redaction } from '@stillwatch/schema';
+import { DETECTOR_INFOS } from './detectors';
+import { shannonEntropy as entropy } from './detectors/entropy';
+import { buildRedactor } from './redactor';
+import { capStringImpl, truncateJsonImpl } from './truncate';
 
 export type DetectorInfo = {
   /** Lowercase kebab-case id used in markers, e.g. "aws-access-key-id". */
@@ -26,8 +30,11 @@ export type DetectorInfo = {
   kind: 'pattern' | 'assignment' | 'entropy' | 'structure';
 };
 
-/** All detectors, in the order they run. */
-export const DETECTORS: readonly DetectorInfo[] = [];
+/**
+ * All detectors, in the order they run. String detectors run first, in this
+ * order, on every string; `secret-field` runs last and only in `redactJson`.
+ */
+export const DETECTORS: readonly DetectorInfo[] = DETECTOR_INFOS;
 
 export type RedactorOptions = {
   /** HMAC key for fingerprints: raw bytes, or a base64url string (as stored in config). */
@@ -47,13 +54,17 @@ export type Redactor = {
   redactJson<T extends JsonValue>(value: T, basePointer?: string): RedactResult<T>;
 };
 
-export function createRedactor(_options: RedactorOptions): Redactor {
-  throw new Error('not implemented: createRedactor');
+/**
+ * Creates a redactor. Throws a TypeError when the fingerprint key is empty or
+ * not base64url.
+ */
+export function createRedactor(options: RedactorOptions): Redactor {
+  return buildRedactor(options);
 }
 
 /** Shannon entropy in bits per character. */
-export function shannonEntropy(_text: string): number {
-  throw new Error('not implemented: shannonEntropy');
+export function shannonEntropy(text: string): number {
+  return entropy(text);
 }
 
 export type TruncateOptions = {
@@ -78,15 +89,21 @@ export type TruncateResult<T> = {
 /**
  * Shortens a JSON value for storage. Strings over their cap keep their head
  * and end with `truncationMarker(n)`. Must run after redaction.
+ *
+ * Containers at depth `maxDepth` or deeper (the root is depth 0) become
+ * "[depth limit]", matching `toJsonValue`. Overrides match a pointer equal to
+ * the prefix or below it. If the serialized value is still over
+ * `maxTotalBytes`, the caps of the largest strings are halved repeatedly
+ * (bounded). `truncated` lists cut strings and arrays and depth-limited values.
  */
 export function truncateJson<T extends JsonValue>(
-  _value: T,
-  _options: TruncateOptions,
+  value: T,
+  options: TruncateOptions,
 ): TruncateResult<T> {
-  throw new Error('not implemented: truncateJson');
+  return truncateJsonImpl(value, options);
 }
 
 /** Caps one string, appending `truncationMarker(n)` when cut. */
-export function capString(_text: string, _max: number): string {
-  throw new Error('not implemented: capString');
+export function capString(text: string, max: number): string {
+  return capStringImpl(text, max);
 }

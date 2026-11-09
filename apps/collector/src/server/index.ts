@@ -4,39 +4,17 @@
  * `startHttpServer`) and the server implementation. See docs/architecture.md
  * ("Local server and dashboard") and the route list in @stillwatch/schema api.ts.
  */
-import type { Server } from 'node:http';
-import type { StatusResponse, StillwatchConfig } from '@stillwatch/schema';
-import type { Store } from '@stillwatch/storage';
-import type { Logger } from '../types';
+import { LOGIN_QUERY_PARAM, type StillwatchConfig } from '@stillwatch/schema';
+import { createLoginToken, decodeAuthSecret } from './auth';
+import { DEFAULT_LIMITS } from './limits';
+import { startServer } from './server';
+import type { HttpServerHandle, ServerDeps } from './types';
 
-export type ServerDeps = {
-  store: Store;
-  config: StillwatchConfig;
-  version: string;
-  /** Built dashboard directory, or null to serve a short "dashboard not built" page. */
-  webRoot: string | null;
-  /** 0 picks a free port (tests). Always binds 127.0.0.1. */
-  port: number;
-  logger: Logger;
-  now: () => number;
-  /** The user's home directory, for path display in reports. */
-  userHome: string;
-  /** Builds the /api/status payload. Implemented by the collector core. */
-  getStatus: () => Promise<StatusResponse>;
-  /** Asks the pipeline to re-analyze a session soon. */
-  requestAnalysis: (sessionId: string) => void;
-  /** Called after a session is deleted through the API. */
-  onSessionDeleted: (sessionId: string) => void;
-};
+export type { HttpServerHandle, ServerDeps } from './types';
 
-export type HttpServerHandle = {
-  readonly port: number;
-  readonly server: Server;
-  close(): Promise<void>;
-};
-
-export function startHttpServer(_deps: ServerDeps): Promise<HttpServerHandle> {
-  return Promise.reject(new Error('not implemented: startHttpServer'));
+/** Starts the server on 127.0.0.1:`deps.port`. Rejects when the port is taken. */
+export function startHttpServer(deps: ServerDeps): Promise<HttpServerHandle> {
+  return startServer(deps, DEFAULT_LIMITS);
 }
 
 /**
@@ -47,6 +25,7 @@ export function startHttpServer(_deps: ServerDeps): Promise<HttpServerHandle> {
  * `v1.<expiresAt>.<sig>` (sig over "api\n" + expiresAt), valid 30 days.
  * Links expire after 120 seconds and are single-use (nonces kept in memory).
  */
-export function createLoginUrl(_config: StillwatchConfig, _options?: { now?: number }): string {
-  throw new Error('not implemented: createLoginUrl');
+export function createLoginUrl(config: StillwatchConfig, options?: { now?: number }): string {
+  const token = createLoginToken(decodeAuthSecret(config.authSecret), options?.now ?? Date.now());
+  return `http://127.0.0.1:${config.port}/?${LOGIN_QUERY_PARAM}=${token}`;
 }

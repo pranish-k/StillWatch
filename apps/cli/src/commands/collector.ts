@@ -11,19 +11,43 @@ export async function startCommand(ctx: Ctx, args: string[]): Promise<number> {
   const { deps } = ctx;
   const home = stillwatchHome(ctx);
   await deps.collector.ensureDataDirs(home);
-  const config = await deps.collector.loadOrCreateConfig(home, deps.now());
+  await deps.collector.loadOrCreateConfig(home, deps.now());
   const status = await deps.collector.collectorStatus(home);
   if (status.running) {
     if (!quiet) ctx.out(`The collector is already running (pid ${status.pid ?? '?'}).`);
     return 0;
   }
-  const { pid } = await deps.collector.startCollectorDetached({
-    stillwatchHome: home,
-    nodePath: deps.execPath,
-    cliPath: deps.cliPath,
-  });
-  if (!quiet) ctx.out(`Collector started (pid ${pid}) on http://127.0.0.1:${config.port}.`);
+  const { pid, port } = await startOrExplain(ctx, home);
+  if (!quiet) ctx.out(`Collector started (pid ${pid}) on http://127.0.0.1:${port}.`);
   return 0;
+}
+
+/** Starts the collector and waits until it listens, or fails with the reason and the log path. */
+export async function startOrExplain(
+  ctx: Ctx,
+  home: string,
+): Promise<{ pid: number; port: number }> {
+  const { deps } = ctx;
+  try {
+    return await deps.collector.startCollector({
+      stillwatchHome: home,
+      nodePath: deps.execPath,
+      cliPath: deps.cliPath,
+    });
+  } catch (error) {
+    if (error instanceof deps.collector.CollectorStartError) {
+      throw new CliError(
+        `The collector did not start. ${startErrorText(ctx, error)}\nDetails are in ${ctx.path(error.logFile)}.`,
+      );
+    }
+    throw error;
+  }
+}
+
+/** A start failure's reason, with paths under the home directory shortened like other output. */
+export function startErrorText(ctx: Ctx, error: Error): string {
+  const home = ctx.deps.home.endsWith('/') ? ctx.deps.home : `${ctx.deps.home}/`;
+  return error.message.replaceAll(home, '~/');
 }
 
 export async function stopCommand(ctx: Ctx, args: string[]): Promise<number> {
@@ -67,33 +91,16 @@ export async function collectorCommand(ctx: Ctx, args: string[]): Promise<number
   return 0;
 }
 
-const START_WAIT_MS = 5000;
-const POLL_MS = 100;
-
 export async function openCommand(ctx: Ctx, args: string[]): Promise<number> {
   const { values } = parse('open', args, { 'no-browser': { type: 'boolean' } });
   const { deps, s } = ctx;
   const home = stillwatchHome(ctx);
   await deps.collector.ensureDataDirs(home);
   const config = await deps.collector.loadOrCreateConfig(home, deps.now());
-  let status = await deps.collector.collectorStatus(home);
-  if (!status.running) {
-    await deps.collector.startCollectorDetached({
-      stillwatchHome: home,
-      nodePath: deps.execPath,
-      cliPath: deps.cliPath,
-    });
-    for (let waited = 0; waited < START_WAIT_MS && !status.running; waited += POLL_MS) {
-      await deps.sleep(POLL_MS);
-      status = await deps.collector.collectorStatus(home);
-    }
-    if (!status.running) {
-      throw new CliError(
-        `The collector did not start. See ${ctx.path(join(home, 'logs', 'collector.log'))}.`,
-      );
-    }
-  }
-  const port = status.port ?? config.port;
+  const status = await deps.collector.collectorStatus(home);
+  const port = status.running
+    ? (status.port ?? config.port)
+    : (await startOrExplain(ctx, home)).port;
   const url = deps.collector.createLoginUrl({ ...config, port }, { now: deps.now() });
   ctx.out(`Dashboard: ${s.cyan(url)}`);
   ctx.out(s.dim('The link signs you in once and expires in 2 minutes.'));

@@ -192,7 +192,9 @@ export async function statusCommand(ctx: Ctx, args: string[]): Promise<number> {
     'Claude Code',
     h.claudeVersion === null
       ? 'not found on PATH'
-      : `${h.claudeVersion} (needs ${MIN_CLAUDE_CODE_VERSION} or newer)`,
+      : h.compatible === false
+        ? `${h.claudeVersion}, too old (needs ${MIN_CLAUDE_CODE_VERSION} or newer)`
+        : h.claudeVersion,
   ]);
   const c = status.collector;
   lines.push([

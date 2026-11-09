@@ -14,7 +14,13 @@ import {
   parsePidRecord,
   readPidFile,
 } from '../src/pidfile';
-import { collectorStatus, startCollectorDetached, stopCollector } from '../src/process';
+import {
+  CollectorStartError,
+  collectorStatus,
+  startCollector,
+  startCollectorDetached,
+  stopCollector,
+} from '../src/process';
 
 let root = '';
 let swHome = '';
@@ -255,5 +261,97 @@ describe('process control', () => {
         cliPath: 'x',
       }),
     ).rejects.toThrow();
+  });
+});
+
+describe('startCollector', () => {
+  /** Writes a stand-in CLI whose `collector run` executes `body`. */
+  async function fakeCli(body: string): Promise<string> {
+    const script = join(root, 'fake-cli.mjs');
+    await writeFile(
+      script,
+      `import { writeFileSync } from 'node:fs';\n` +
+        `const pidFile = ${JSON.stringify(stillwatchPaths(swHome).pidFile)};\n` +
+        body,
+    );
+    return script;
+  }
+
+  function startWith(cliPath: string, timeoutMs = 3_000) {
+    return startCollector({
+      stillwatchHome: swHome,
+      nodePath: process.execPath,
+      cliPath,
+      timeoutMs,
+    });
+  }
+
+  async function failure(promise: Promise<unknown>): Promise<CollectorStartError> {
+    const error = await promise.then(
+      () => null,
+      (e: unknown) => e,
+    );
+    if (!(error instanceof CollectorStartError))
+      throw new Error(`expected CollectorStartError, got ${String(error)}`);
+    return error;
+  }
+
+  it('resolves once the collector records its port', async () => {
+    const cli = await fakeCli(
+      `setTimeout(() => writeFileSync(pidFile, process.pid + '\\n4321\\n' + Date.now() + '\\n'), 200);\n` +
+        `setInterval(() => {}, 1000);\n`,
+    );
+    const started = await startWith(cli);
+    expect(started.port).toBe(4321);
+    expect(await collectorStatus(swHome)).toEqual({ running: true, pid: started.pid, port: 4321 });
+    expect(await stopCollector(swHome, { timeoutMs: 2_000 })).toBe(true);
+  });
+
+  it('explains a port that another program is using', async () => {
+    const cli = await fakeCli(
+      `console.error('stillwatch collector: The collector could not start: listen EADDRINUSE: address already in use 127.0.0.1:7391');\n` +
+        `process.exit(1);\n`,
+    );
+    const started = Date.now();
+    const error = await failure(startWith(cli));
+    expect(error.message).toBe(
+      `Port 7391 is already in use by another program. Set "port" in ${stillwatchPaths(swHome).config} to a free port, then try again.`,
+    );
+    expect(error.logFile).toBe(stillwatchPaths(swHome).logFile);
+    // It notices the exit rather than waiting out the timeout.
+    expect(Date.now() - started).toBeLessThan(2_500);
+  });
+
+  it('passes on any other reason the collector logged', async () => {
+    const cli = await fakeCli(
+      `console.error('stillwatch collector: The collector could not start: database is locked');\n` +
+        `process.exit(1);\n`,
+    );
+    expect((await failure(startWith(cli))).message).toBe('database is locked');
+  });
+
+  it('ignores log lines from earlier runs', async () => {
+    await ensureDataDirs(swHome);
+    await writeFile(
+      stillwatchPaths(swHome).logFile,
+      'stillwatch collector: The collector could not start: listen EADDRINUSE: address already in use 127.0.0.1:9\n',
+    );
+    const cli = await fakeCli('process.exit(1);\n');
+    expect((await failure(startWith(cli))).message).toBe('It exited without writing a reason.');
+  });
+
+  it('gives up after the timeout without killing a slow start', async () => {
+    // Records itself as starting (no port yet) and never gets further.
+    const cli = await fakeCli(
+      `writeFileSync(pidFile, process.pid + '\\n\\n' + Date.now() + '\\n');\n` +
+        `setInterval(() => {}, 1000);\n`,
+    );
+    const error = await failure(startWith(cli, 500));
+    expect(error.message).toBe('It did not start listening within a few seconds.');
+    // Under load the fake may record itself only after the timeout; wait so it can be stopped.
+    await vi.waitFor(async () => expect((await collectorStatus(swHome)).pid).not.toBeNull(), {
+      timeout: 10_000,
+    });
+    expect(await stopCollector(swHome, { timeoutMs: 2_000 })).toBe(true);
   });
 });

@@ -3,7 +3,7 @@
  * pid file, a detached start, and a graceful stop.
  */
 import { spawn } from 'node:child_process';
-import { open } from 'node:fs/promises';
+import { open, readFile, stat } from 'node:fs/promises';
 import { STILLWATCH_HOME_ENV, stillwatchPaths } from '@stillwatch/schema';
 import { ensureDataDirs } from './config';
 import { FILE_MODE, removeFile } from './fs-safe';
@@ -14,6 +14,9 @@ export type CollectorProcessStatus = { running: boolean; pid: number | null; por
 const STOP_POLL_MS = 50;
 const DEFAULT_STOP_TIMEOUT_MS = 5_000;
 const KILL_WAIT_MS = 1_000;
+const START_POLL_MS = 50;
+const DEFAULT_START_TIMEOUT_MS = 5_000;
+const LOG_PREFIX = 'stillwatch collector: ';
 
 /** Running once a live collector has recorded its port (it is listening). */
 export async function collectorStatus(stillwatchHome: string): Promise<CollectorProcessStatus> {
@@ -48,6 +51,89 @@ export async function startCollectorDetached(options: {
     return { pid };
   } finally {
     await log.close();
+  }
+}
+
+/** The collector was started but is not listening; `message` says why, in plain words. */
+export class CollectorStartError extends Error {
+  override name = 'CollectorStartError';
+  readonly logFile: string;
+
+  constructor(message: string, logFile: string) {
+    super(message);
+    this.logFile = logFile;
+  }
+}
+
+async function fileSize(path: string): Promise<number> {
+  try {
+    return (await stat(path)).size;
+  } catch {
+    return 0;
+  }
+}
+
+/** Why a start failed: the last line the new process wrote to the log, made actionable. */
+async function startFailureReason(
+  stillwatchHome: string,
+  logOffset: number,
+  timedOut: boolean,
+): Promise<string> {
+  const paths = stillwatchPaths(stillwatchHome);
+  let written = '';
+  try {
+    written = (await readFile(paths.logFile, 'utf8')).slice(logOffset);
+  } catch {
+    // No log; fall through to the generic reason.
+  }
+  const last = written
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '')
+    .at(-1);
+  const port = last === undefined ? null : (/EADDRINUSE\b.*:(\d+)\s*$/.exec(last)?.[1] ?? null);
+  if (port !== null) {
+    return `Port ${port} is already in use by another program. Set "port" in ${paths.config} to a free port, then try again.`;
+  }
+  if (last !== undefined) {
+    const reason = last.startsWith(LOG_PREFIX) ? last.slice(LOG_PREFIX.length) : last;
+    return reason.replace(/^The collector could not start: /, '');
+  }
+  return timedOut
+    ? 'It did not start listening within a few seconds.'
+    : 'It exited without writing a reason.';
+}
+
+/**
+ * Starts the collector in the background and waits until it is listening.
+ * Resolves with the listening process (an already running collector counts),
+ * or rejects with `CollectorStartError` explaining why it is not running.
+ */
+export async function startCollector(options: {
+  stillwatchHome: string;
+  nodePath: string;
+  cliPath: string;
+  timeoutMs?: number;
+}): Promise<{ pid: number; port: number }> {
+  const { logFile } = stillwatchPaths(options.stillwatchHome);
+  const logOffset = await fileSize(logFile);
+  const { pid } = await startCollectorDetached(options);
+  const deadline = Date.now() + (options.timeoutMs ?? DEFAULT_START_TIMEOUT_MS);
+  for (;;) {
+    const status = await collectorStatus(options.stillwatchHome);
+    if (status.running && status.pid !== null && status.port !== null) {
+      return { pid: status.pid, port: status.port };
+    }
+    const exited = !alive(pid);
+    const timedOut = Date.now() >= deadline;
+    if (exited || timedOut) {
+      // A process that is still starting is left alone; it may yet come up.
+      throw new CollectorStartError(
+        await startFailureReason(options.stillwatchHome, logOffset, !exited),
+        logFile,
+      );
+    }
+    await new Promise((r) => setTimeout(r, START_POLL_MS));
   }
 }
 

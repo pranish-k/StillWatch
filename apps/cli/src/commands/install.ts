@@ -22,6 +22,7 @@ import {
   type StoredInstallRecord,
 } from '../common';
 import { unifiedDiff } from '../diff';
+import { startErrorText } from './collector';
 import { writeFileAtomic } from '../fsutil';
 import { plural, type Ctx } from '../output';
 import { VERSION } from '../version';
@@ -215,15 +216,18 @@ async function ensureCollectorRunning(ctx: Ctx, home: string): Promise<string> {
   try {
     const status = await ctx.deps.collector.collectorStatus(home);
     if (status.running) return `already running (pid ${status.pid ?? '?'})`;
-    const { pid } = await ctx.deps.collector.startCollectorDetached({
+    const { pid } = await ctx.deps.collector.startCollector({
       stillwatchHome: home,
       nodePath: ctx.deps.execPath,
       cliPath: ctx.deps.cliPath,
     });
     return `started (pid ${pid})`;
   } catch (error) {
-    ctx.warn(`Could not start the collector: ${errorMessage(error)}`);
-    return "not running; run 'stillwatch start'";
+    // The hooks still record into the spool; the collector imports it once it runs.
+    ctx.warn(
+      `The collector did not start: ${error instanceof Error ? startErrorText(ctx, error) : errorMessage(error)}`,
+    );
+    return "not running; fix the problem above, then run 'stillwatch start'";
   }
 }
 

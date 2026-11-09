@@ -1,5 +1,5 @@
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -41,13 +41,18 @@ describe('hook script performance', () => {
       renderHookScript({ stillwatchHome: home, nodePath: '/nonexistent/node', cliPath: '/x' }),
       { mode: 0o700 },
     );
-    // The same process launches the hook needs on this shell: cat, mv, and
-    // mktemp when the shell has no $RANDOM (dash, the /bin/sh on Debian and
-    // Ubuntu). true stands in for mv and mktemp.
+    // The baseline does only the work the hook cannot avoid, the same way the
+    // hook does it on this shell: create a file in tmp, copy stdin into it, and
+    // move it into new. Shells without $RANDOM (dash, the /bin/sh on Debian and
+    // Ubuntu) need mktemp for the name.
     const hasRandom = execFileSync('/bin/sh', ['-c', 'printf %s "${RANDOM:-}"']).length > 0;
-    const launches = hasRandom ? 'cat >/dev/null; true' : 'cat >/dev/null; true; true';
+    const tmp = join(root, 'base-tmp');
+    const dest = join(root, 'base-new');
+    await mkdir(tmp);
+    await mkdir(dest);
+    const create = hasRandom ? `t="${tmp}/b.$$"; : >"$t"` : `t=$(mktemp "${tmp}/b.XXXXXXXXXX")`;
     baseline = join(root, 'baseline.sh');
-    await writeFile(baseline, `${launches.replaceAll('true', '/usr/bin/true')}\n`, { mode: 0o700 });
+    await writeFile(baseline, `${create}\ncat >"$t"\nmv -f "$t" "${dest}/"\n`, { mode: 0o700 });
   });
 
   afterEach(async () => {
@@ -56,19 +61,18 @@ describe('hook script performance', () => {
 
   // Starting /bin/sh costs 5-8 ms on a laptop and two or three times that on
   // a busy CI runner, and load slows the hook's own work by the same factor, so
-  // an absolute budget measures the machine. A baseline script that starts the
-  // same processes the hook needs runs at about 1.08 of the hook's time from
-  // idle and 1.26 heavily loaded, on bash and on dash. Each extra subprocess
-  // in the hook adds about 0.25, and starting Node in the foreground far more.
-  // The 20th percentile ignores runs that a scheduler hiccup slowed.
-  it('costs no more than the processes it starts', async () => {
+  // an absolute budget measures the machine. Against a script doing the same
+  // unavoidable work, the hook measures 1.01-1.05 on bash and dash, idle or
+  // loaded. Each extra subprocess adds about 0.22, so two of them, or starting
+  // Node, fail the limit. The 20th percentile ignores scheduler hiccups.
+  it('costs little more than the file work it must do', async () => {
     const bases: number[] = [];
     const hooks: number[] = [];
     for (let i = 0; i < 50; i++) {
       bases.push(await timeScript(baseline, '{"a":1}'));
       hooks.push(await timeScript(script, '{"a":1}'));
     }
-    expect(p20(hooks) / p20(bases)).toBeLessThan(1.5);
+    expect(p20(hooks) / p20(bases)).toBeLessThan(1.3);
     expect(await readdir(join(home, 'spool', 'new'))).toHaveLength(50);
   });
 });

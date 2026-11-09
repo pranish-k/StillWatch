@@ -197,7 +197,7 @@ These hold everywhere in the code base.
 
 | Path | Budget |
 | --- | --- |
-| Hook script per event | under 15 ms wall time on a laptop |
+| Hook script per event | under 15 ms wall time on a laptop, and no slower than starting `/bin/sh` and the processes it needs (`cat`, `mv`, and `mktemp` without `$RANDOM`) |
 | Import of one event (adapt, redact, facts, truncate, store) | under 2 ms median |
 | Start snapshot, typical repository | under 300 ms, never blocking the agent |
 | Session analysis, 2,000 events | under 200 ms |

@@ -463,7 +463,8 @@ for (const p of ['mkfs', 'mkfs.ext4', 'mkfs.xfs', 'mkfs.btrfs', 'mkfs.vfat', 'ne
 function git(v: CommandView, emit: Emit, context: SignalContext): void {
   const { sub, args, configs } = gitParts(v, context.home);
   const values = args.map((w) => w.value);
-  for (const c of configs) gitConfigPair(c.replace(/^--config-env=?/, ''), null, emit);
+  // One-shot `-c` settings can bypass checks for this command but do not persist.
+  for (const c of configs) gitConfigPair(c.replace(/^--config-env=?/, ''), null, emit, true);
   if (
     GIT_VERIFY_SKIPPABLE.has(sub) &&
     (values.includes('--no-verify') ||
@@ -562,7 +563,12 @@ function gitConfig(args: readonly Word[], emit: Emit): void {
 }
 
 /** Classifies one `key=value` (from `-c`) or one key and value. */
-function gitConfigPair(keyOrPair: string, value: string | null, emit: Emit): void {
+function gitConfigPair(
+  keyOrPair: string,
+  value: string | null,
+  emit: Emit,
+  transient = false,
+): void {
   let key = keyOrPair;
   let val = value;
   if (val === null) {
@@ -575,6 +581,8 @@ function gitConfigPair(keyOrPair: string, value: string | null, emit: Emit): voi
     emit('safety_bypass', 'git hooks disabled (core.hooksPath)', 'high');
   } else if (k === 'http.sslverify' && /^(false|no|off|0)$/i.test(val)) {
     emit('safety_bypass', 'git http.sslVerify=false', 'high');
+  } else if (transient) {
+    return;
   } else if (k.startsWith('alias.')) {
     if (val.startsWith('!')) emit('persistence_command', `git config ${key}`, 'high');
   } else if (GIT_PERSIST_KEY.test(k)) {

@@ -42,6 +42,7 @@ pnpm check
 | `pnpm format` | Prettier (Markdown is formatted by hand) |
 | `pnpm build` | Builds the dashboard, then bundles the CLI into `apps/cli/dist/stillwatch.mjs` |
 | `pnpm lab` | Builds and runs the attack lab |
+| `VITE_STILLWATCH_MOCK=1 pnpm --filter @stillwatch/web dev` | Runs the dashboard with mock sessions and no collector; add `?mock=empty`, `?mock=offline`, or `?mock=signed-out` to see those states |
 
 ## Testing rules
 

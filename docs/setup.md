@@ -93,6 +93,17 @@ stillwatch open
 This starts the collector if needed and opens the dashboard at `http://127.0.0.1:7391` with a single-use login link that is valid for 120 seconds.
 Pass `--no-browser` to skip opening a browser.
 
+The dashboard has three pages.
+
+- **Sessions** lists sessions riskiest first.
+  Filter by risk or status, search titles and projects, or switch to newest first; the filters stay in the address, so back and reload keep them.
+- **A session** opens on its report: a summary, why it got its risk level, what remains after it ended, files changed, sensitive access, network, and capture gaps.
+  Every finding links to the events behind it in the **Timeline** tab, where you can step through events with the arrow keys or `j` and `k`, and press Escape to close an event.
+  From a session you can download the Markdown report, analyze it again, or delete it.
+- **Status** shows whether the hooks are installed, whether the collector is keeping up, and where data is kept.
+
+The dashboard shows all session data as plain text, so a hostile file name or command cannot run in your browser.
+
 | Command | What it does |
 | --- | --- |
 | `stillwatch sessions [--json] [--limit <n>]` | Lists sessions, riskiest first |

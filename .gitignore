@@ -20,3 +20,6 @@ tmp/
 
 # Agent worktrees
 .claude/worktrees/
+
+# Local project notes (never pushed)
+.notes/

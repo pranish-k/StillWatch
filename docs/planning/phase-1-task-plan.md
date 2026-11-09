@@ -58,7 +58,7 @@ The hook handler became a POSIX shell script that writes one file per event ([AD
 | ☑ | S2-05 | Delete spool data after a safe import | Reduced data exposure | S2-04 | 1 |
 | ☑ | S2-06 | Add the event hash chain | Tamper evidence | S2-04 | 1 |
 | ☑ | S2-07 | Serve the dashboard with local token access | Secure local app | S2-04 | 1 |
-| ☐ | S2-08 | Build the session list and timeline | Reviewable sessions | S2-07 | 2 |
+| ☑ | S2-08 | Build the session list and timeline | Reviewable sessions | S2-07 | 2 |
 | ☑ | S2-09 | Test with planted fake secrets | Redaction test results | S2-03 | 1 |
 
 **Exit gate:** a past session can be reviewed in order, and automated searches find no planted secrets outside the protected spool.
@@ -72,7 +72,7 @@ The hook handler became a POSIX shell script that writes one file per event ([AD
 | --- | --- | --- | --- | --- | --- |
 | ☑ | S3-01 | Record the Git state at session start | Start snapshot | S2-04 | 3 |
 | ☑ | S3-02 | Compute the final diff, including untracked files | Change list | S3-01 | 3 |
-| ☐ | S3-03 | Show file changes in the session view | File activity panel | S3-02 | 2 |
+| ☑ | S3-03 | Show file changes in the session view | File activity panel | S3-02 | 2 |
 | ☑ | S3-04 | Mark sessions as active, finished, or interrupted | Session status | S2-04 | 2 |
 | ☑ | S3-05 | Record capture gaps | Visible missing data | S2-04 | 2 |
 | ☑ | S3-06 | Flag changes missing from the tool log | Evidence mismatch check | S3-02 | 2 |
@@ -97,7 +97,7 @@ The hook handler became a POSIX shell script that writes one file per event ([AD
 | ☑ | S4-08 | Add safety bypass and interrupted-session rules | Behavior findings | S4-01, S3-04 | 3 |
 | ☑ | S4-09 | Extract domains from tool calls | Partial network evidence | S2-02 | 2 |
 | ☑ | S4-10 | Test every rule on normal fixtures | Noise baseline | S4-02 to S4-09 | 3 |
-| ☐ | S4-11 | Build the findings view | Alerts with evidence links | S4-02 | 1 |
+| ☑ | S4-11 | Build the findings view | Alerts with evidence links | S4-02 | 1 |
 
 **Exit gate:** all planted cases are flagged, each finding explains itself, and normal fixtures stay within the noise target.
 
@@ -109,9 +109,9 @@ The hook handler became a POSIX shell script that writes one file per event ([AD
 | Done | ID | Task | Output | Needs | Hours |
 | --- | --- | --- | --- | --- | --- |
 | ☑ | S5-01 | Calculate session risk levels | Risk logic | S4-11 | 2 |
-| ☐ | S5-02 | Build the What remains panel | Persistent change view | S4-11 | 3 |
+| ☑ | S5-02 | Build the What remains panel | Persistent change view | S4-11 | 3 |
 | ☑ | S5-03 | Link notes to the sessions that wrote and loaded them | Session links | S4-07 | 3 |
-| ☐ | S5-04 | Build the full session report | Dashboard report | S5-01, S5-02 | 3 |
+| ☑ | S5-04 | Build the full session report | Dashboard report | S5-01, S5-02 | 3 |
 | ☑ | S5-05 | Export a redacted Markdown report | `stillwatch report` | S5-04 | 2 |
 | ☑ | S5-06 | Sort the session list by risk and time | Review queue | S5-01 | 1 |
 | ☑ | S5-07 | Test reports against fixtures | Report tests | S5-05 | 1 |
@@ -128,7 +128,7 @@ The hook handler became a POSIX shell script that writes one file per event ([AD
 | ☑ | S6-01 | Build the attack lab runner | `stillwatch lab` scorecard | S4-10 | 5 |
 | ☑ | S6-02 | Add the first scenarios: poisoned README, fake key, and git hook | Baseline scenarios | S6-01 | 3 |
 | ☑ | S6-03 | Add poisoned note, safety bypass, and fake MCP scenarios | Expanded scenarios | S6-01 | 4 |
-| ☐ | S6-04 | Test malicious filenames and log content in the UI | UI security fixes | S5-04 | 3 |
+| ☑ | S6-04 | Test malicious filenames and log content in the UI | UI security fixes | S5-04 | 3 |
 | ☐ | S6-05 | Review local service access controls | Access test results | S2-07 | 2 |
 | ☐ | S6-06 | Review dependencies | Dependency notes | S0-02 | 2 |
 | ☑ | S6-07 | Add retention and `stillwatch delete-data` | Data controls | S2-04 | 2 |

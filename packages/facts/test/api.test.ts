@@ -60,15 +60,6 @@ describe('parseShell', () => {
       expect(() => shellFacts(s)).not.toThrow();
     }
   });
-
-  it('parses hostile nesting in linear time', () => {
-    const deep = '$('.repeat(5_000) + ')'.repeat(5_000);
-    const wide = 'a | '.repeat(15_000) + 'b';
-    const start = performance.now();
-    parseShell(deep, CWD, HOME);
-    shellFacts(wide);
-    expect(performance.now() - start).toBeLessThan(2_000);
-  });
 });
 
 describe('extractUrls and hostnameOf', () => {

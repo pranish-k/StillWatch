@@ -17,7 +17,9 @@ function shellQuote(value: string): string {
  * POSIX sh source of the capture hook (ADR-016). Invoked by Claude Code in
  * exec form as `/bin/sh <hook.sh> <agent> <EventName> [--ensure-collector]`
  * with the payload on stdin. It writes stdin to
- * `spool/tmp/<agent>.<Event>.XXXXXXXXXX` (mktemp, mode 0600), renames it into
+ * `spool/tmp/<agent>.<Event>.<suffix>` (mode 0600, created exclusively with
+ * noclobber and the pid plus $RANDOM, or with mktemp when the shell has no
+ * $RANDOM), renames it into
  * `spool/new/`, optionally starts the collector in the background
  * (`STILLWATCH_HOME=<home> <node> <cli> start --quiet`, stdio to /dev/null),
  * and always exits 0 without writing to stdout. Agent and event arguments are
@@ -54,10 +56,29 @@ case $event in
 esac
 [ \${#event} -le 40 ] || event=Unknown
 
-tmp=$(mktemp "$tmpdir/$agent.$event.XXXXXXXXXX") || {
-  mkdir -p "$tmpdir" "$newdir"
-  tmp=$(mktemp "$tmpdir/$agent.$event.XXXXXXXXXX")
-} || tmp=
+# Create the temp file in the shell when it has $RANDOM (saves a mktemp
+# process on every event); noclobber makes the create exclusive.
+tmp=
+if [ -n "\${RANDOM:-}" ]; then
+  set -C
+  n=0
+  while [ "$n" -lt 4 ]; do
+    try="$tmpdir/$agent.$event.p$$r\${RANDOM}r\${RANDOM}"
+    if : >"$try"; then
+      tmp=$try
+      break
+    fi
+    [ -d "$tmpdir" ] || mkdir -p "$tmpdir" "$newdir"
+    n=$((n + 1))
+  done
+  set +C
+fi
+if [ -z "$tmp" ]; then
+  tmp=$(mktemp "$tmpdir/$agent.$event.XXXXXXXXXX") || {
+    mkdir -p "$tmpdir" "$newdir"
+    tmp=$(mktemp "$tmpdir/$agent.$event.XXXXXXXXXX")
+  } || tmp=
+fi
 if [ -n "$tmp" ]; then
   if cat >"$tmp"; then
     mv -f "$tmp" "$newdir/" || { mkdir -p "$newdir" && mv -f "$tmp" "$newdir/"; } || rm -f "$tmp"

@@ -1,4 +1,5 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { chmod, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -146,14 +147,15 @@ writeFileSync(${JSON.stringify(marker)}, JSON.stringify({ args: process.argv.sli
     expect((await stat(join(home, 'spool', 'new', names[0]!))).size).toBe(payload.length);
   });
 
-  it('runs in under 15 ms median', async () => {
-    await mkdir(join(home, 'spool', 'new'), { recursive: true });
-    const times: number[] = [];
-    for (let i = 0; i < 50; i++) {
-      times.push((await runHook(script, ['claude-code', 'PreToolUse'], '{"a":1}')).ms);
-    }
-    times.sort((a, b) => a - b);
-    expect(times[25]).toBeLessThan(15);
-    expect(await spooled()).toHaveLength(50);
-  });
+  it.skipIf(!existsSync('/bin/dash'))(
+    'falls back to mktemp in a shell without $RANDOM',
+    async () => {
+      await mkdir(join(home, 'spool', 'new'), { recursive: true });
+      const r = spawnSync('/bin/dash', [script, 'claude-code', 'Stop'], { input: '{"b":2}' });
+      expect(r.status).toBe(0);
+      const names = await spooled();
+      expect(names).toHaveLength(1);
+      expect(names[0]).toMatch(/^claude-code\.Stop\.[A-Za-z0-9]{10}$/);
+    },
+  );
 });

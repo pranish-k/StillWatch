@@ -19,8 +19,9 @@ export type SpoolEntry = {
 };
 
 /** Epoch milliseconds (microsecond precision) from a nanosecond timestamp. */
+/** Nanoseconds to whole milliseconds, rounded. Ordering uses the full nanosecond value. */
 export function nsToMs(ns: bigint): number {
-  return Number(ns / 1000n) / 1000;
+  return Number((ns + 500_000n) / 1_000_000n);
 }
 
 /**

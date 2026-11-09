@@ -75,6 +75,10 @@ export class FakeStore implements Store {
       s.lastEventAt = Math.max(s.lastEventAt, e.ts);
       s.startedAt = Math.min(s.startedAt, e.ts);
       s.cwd ??= e.cwd;
+      // Like the real store: the first known project root sticks.
+      if (s.projectRoot === null && item.projectRoot !== null && item.projectRoot !== '') {
+        s.projectRoot = item.projectRoot;
+      }
       s.eventCount++;
       if (e.kind === 'session.end') {
         s.status = 'finished';
@@ -227,7 +231,8 @@ export function fakeAdapt(record: SpoolRecord): AdaptResult {
   if (!isRecord(raw)) return { ok: false, reason: 'not an object', sessionId: null };
   const sessionId = typeof raw.session_id === 'string' ? raw.session_id : null;
   const name = typeof raw.hook_event_name === 'string' ? raw.hook_event_name : null;
-  if (sessionId === null || name === null) return { ok: false, reason: 'missing fields', sessionId };
+  if (sessionId === null || name === null)
+    return { ok: false, reason: 'missing fields', sessionId };
   const base = {
     id: `id-${record.sourceId}`,
     sourceId: record.sourceId,
@@ -245,7 +250,11 @@ export function fakeAdapt(record: SpoolRecord): AdaptResult {
   };
   let event: NormalizedEvent;
   if (name === 'SessionStart') {
-    event = { ...base, kind: 'session.start', data: { source: null, model: null, sessionTitle: null } };
+    event = {
+      ...base,
+      kind: 'session.start',
+      data: { source: null, model: null, sessionTitle: null },
+    };
   } else if (name === 'SessionEnd') {
     event = { ...base, kind: 'session.end', data: { reason: 'exit' } };
   } else if (name === 'DirectoryAdded') {
@@ -347,7 +356,13 @@ export function fakeDeps(rec: Recorder): PipelineDeps {
     },
     findRepoRoot: (dir) => Promise.resolve(dir.endsWith('/repo') ? dir : null),
     persistenceSurface: (ctx) => [
-      { path: `${ctx.home}/.zshrc`, kind: 'file', class: 'startup_file', label: 'zshrc', argv: null },
+      {
+        path: `${ctx.home}/.zshrc`,
+        kind: 'file',
+        class: 'startup_file',
+        label: 'zshrc',
+        argv: null,
+      },
     ],
     repoSurfaceSpecs: () => [
       { rel: 'hooks', base: 'git_common_dir', kind: 'dir', class: 'git_hook', label: 'hooks' },

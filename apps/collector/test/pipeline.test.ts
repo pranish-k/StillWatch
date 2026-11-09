@@ -1,7 +1,7 @@
 import { open, readdir, utimes, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { LIMITS } from '@stillwatch/schema';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MAX_RECORD_ATTEMPTS } from '../src/importer';
 import { harness, type Harness } from './fakes';
 
@@ -26,8 +26,16 @@ describe('spool import', () => {
     const base = t.clock.now - 10_000;
     await t.spool('claude-code.Stop.bbbbbbbb', '{"session_id":"s","hook_event_name":"Stop"}', base);
     await t.spool('claude-code.Stop.aaaaaaaa', '{"session_id":"s","hook_event_name":"Stop"}', base);
-    await t.spool('claude-code.Stop.00000000', '{"session_id":"s","hook_event_name":"Stop"}', base + 5);
-    await t.spool('claude-code.Stop.zzzzzzzz', '{"session_id":"s","hook_event_name":"Stop"}', base - 5);
+    await t.spool(
+      'claude-code.Stop.00000000',
+      '{"session_id":"s","hook_event_name":"Stop"}',
+      base + 5,
+    );
+    await t.spool(
+      'claude-code.Stop.zzzzzzzz',
+      '{"session_id":"s","hook_event_name":"Stop"}',
+      base - 5,
+    );
     for (let i = 0; i < 497; i++) await t.event('s', 'Notification', base + 100 + i);
     const stats = await t.pipeline.importOnce();
     expect(stats).toMatchObject({ files: 501, imported: 501, duplicates: 0, failed: 0 });
@@ -49,7 +57,9 @@ describe('spool import', () => {
       await t.event('s', 'SessionStart', t.clock.now - 100),
       await t.event('s', 'Notification', t.clock.now - 50),
     ];
-    const bodies = await Promise.all(paths.map((p) => import('node:fs/promises').then((f) => f.readFile(p))));
+    const bodies = await Promise.all(
+      paths.map((p) => import('node:fs/promises').then((f) => f.readFile(p))),
+    );
     await t.pipeline.importOnce();
     for (const [i, p] of paths.entries()) await writeFile(p, bodies[i]!);
     const again = await t.pipeline.importOnce();
@@ -112,7 +122,11 @@ describe('spool import', () => {
       t.pipeline.importOnce(),
       t.pipeline.importOnce(),
     ]);
-    expect(runs.reduce((n, r) => n + r.imported, 0)).toBe(1);
+    // Calls made before the queued run starts join it and share its result.
+    expect(runs[1]).toBe(runs[0]);
+    expect(runs[2]).toBe(runs[0]);
+    expect(runs[0].imported).toBe(1);
+    expect(t.store.events).toHaveLength(1);
   });
 });
 
@@ -209,11 +223,12 @@ describe('sweep', () => {
     await writeFile(stale, 'partial');
     const old = (t.clock.now - 11 * 60_000) / 1000;
     await utimes(stale, old, old);
+
+    t.clock.now += 25 * 60 * 60_000;
+    // Fresh relative to the sweep time: a hook write still in progress.
     const fresh = join(t.home, 'spool', 'tmp', 'claude-code.Stop.freshtmp');
     await writeFile(fresh, 'partial');
     await utimes(fresh, t.clock.now / 1000, t.clock.now / 1000);
-
-    t.clock.now += 25 * 60 * 60_000;
     t.rec.status = () => ({ status: 'finished', endReason: 'no_session_end' });
     await t.pipeline.sweep();
 
@@ -227,6 +242,11 @@ describe('sweep', () => {
     expect(await readdir(join(t.home, 'spool', 'tmp'))).toEqual(['claude-code.Stop.freshtmp']);
     expect(t.store.getGaps(null)[0]?.reason).toMatch(/1 unfinished hook write was abandoned/);
     expect(t.store.retentionCutoffs).toEqual([t.clock.now - 30 * 24 * 60 * 60_000]);
-    expect(t.store.analyzed.get('s')).toBe(-1);
+    // The status change marks the session for analysis, and the scheduler runs it
+    // at once because the session has waited past maxWait on the fake clock.
+    await vi.waitFor(() => {
+      expect(t.rec.analyzed).toContain('s');
+    });
+    expect(t.store.analyzed.get('s')).toBe(1);
   });
 });

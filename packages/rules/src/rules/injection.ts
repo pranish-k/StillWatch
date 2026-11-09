@@ -15,19 +15,29 @@ function sourceName(event: StoredEvent): string {
   return 'session data';
 }
 
+/** One finding per event and signal kind, so one poisoned file does not produce a finding per phrase. */
 export const promptInjection: RuleFn = (ctx) => {
-  const out: FindingDraft[] = [];
+  const groups = new Map<string, { event: StoredEvent; kind: string; details: string[] }>();
   for (const { event, signal } of ctx.signals) {
     if (signal.kind !== 'prompt_injection' && signal.kind !== 'hidden_text') continue;
     if (!untrusted(event, signal.source)) continue;
-    const hidden = signal.kind === 'hidden_text';
+    const key = `${event.id}\u0000${signal.kind}`;
+    const group = groups.get(key) ?? { event, kind: signal.kind, details: [] };
+    if (!group.details.includes(signal.detail)) group.details.push(signal.detail);
+    groups.set(key, group);
+  }
+  const out: FindingDraft[] = [];
+  for (const { event, kind, details } of groups.values()) {
+    const hidden = kind === 'hidden_text';
+    const first = details[0] ?? '';
+    const more = details.length > 1 ? ` and ${details.length - 1} more` : '';
     out.push(
       eventDraft([event], {
         ruleId: 'prompt_injection.possible',
         severity: 'medium',
         title: hidden ? 'Hidden text in content the agent read' : 'Possible prompt injection',
-        reason: `Content that reached the agent through ${sourceName(event)} contains ${hidden ? 'hidden text' : 'instruction-like text aimed at an agent'} ("${signal.detail}").`,
-        subject: `${signal.kind}:${signal.detail.toLowerCase()}`,
+        reason: `Content that reached the agent through ${sourceName(event)} contains ${hidden ? 'hidden text' : 'instruction-like text aimed at an agent'} ("${first}"${more}).`,
+        subject: `${kind}:${first.toLowerCase()}`,
       }),
     );
   }

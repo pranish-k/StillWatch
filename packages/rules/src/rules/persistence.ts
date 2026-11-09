@@ -27,13 +27,6 @@ function commands(ctx: RuleContext): { event: StoredEvent; command: CommandFact 
 }
 
 /** `git config` keys a command sets. */
-function gitConfigKeys(command: CommandFact): string[] {
-  if (command.program !== 'git') return [];
-  const i = command.args.indexOf('config');
-  if (i === -1) return [];
-  return command.args.slice(i + 1).filter((a) => !a.startsWith('-') && a.includes('.'));
-}
-
 function label(l: string | null): string {
   return l === null ? '' : ` (${l})`;
 }
@@ -50,11 +43,6 @@ export const gitHook: RuleFn = (ctx) => {
   const events: StoredEvent[] = [];
   for (const s of actionSignals(ctx, 'persistence_command')) {
     if (/core\.hookspath/i.test(s.signal.detail)) events.push(s.event);
-  }
-  for (const { event, command } of commands(ctx)) {
-    if (gitConfigKeys(command).some((k) => k.toLowerCase() === 'core.hookspath')) {
-      events.push(event);
-    }
   }
   if (events.length > 0) {
     out.push(
@@ -85,19 +73,26 @@ export const gitConfig: RuleFn = (ctx) => {
           : `New content in ${show(ctx, c.path)} sets ${risk}, which makes ordinary git commands run programs.`,
     });
   });
-  for (const { event, command } of commands(ctx)) {
-    for (const key of gitConfigKeys(command)) {
-      if (!RISKY_GIT_CONFIG_KEY.test(key)) continue;
-      out.push(
-        eventDraft([event], {
-          ruleId: 'persistence.git_config',
-          severity: 'high',
-          title: 'Risky git configuration set',
-          reason: `The agent ran git config to set ${key}, which makes ordinary git commands run programs.`,
-          subject: `command:${key.toLowerCase()}`,
-        }),
-      );
+  // Facts parse git config (skipping reads, unsets, and one-shot -c) into persistence_command signals.
+  for (const { event, signal } of actionSignals(ctx, 'persistence_command')) {
+    const key = /^git config (\S+)$/.exec(signal.detail)?.[1];
+    // core.hooksPath belongs to persistence.git_hook (spec), so it is not reported twice.
+    if (
+      key === undefined ||
+      !RISKY_GIT_CONFIG_KEY.test(key) ||
+      key.toLowerCase() === 'core.hookspath'
+    ) {
+      continue;
     }
+    out.push(
+      eventDraft([event], {
+        ruleId: 'persistence.git_config',
+        severity: 'high',
+        title: 'Risky git configuration set',
+        reason: `The agent ran git config to set ${key}, which makes ordinary git commands run programs.`,
+        subject: `command:${key.toLowerCase()}`,
+      }),
+    );
   }
   return out;
 };

@@ -1,4 +1,8 @@
-/** Test builders: sessions, events, snapshots, and a small faithful path classifier. */
+/**
+ * Test builders: sessions, events, and snapshots. Unless a test passes facts,
+ * each event's facts come from the real extractor, as the collector stores them.
+ */
+import { extractFacts } from '@stillwatch/facts';
 import {
   emptyFacts,
   type AnalysisInput,
@@ -6,7 +10,6 @@ import {
   type EventKind,
   type FileAccess,
   type PathClass,
-  type PathClassification,
   type RawFileChange,
   type SessionSnapshot,
   type SnapshotDiff,
@@ -20,37 +23,6 @@ export const HOME = '/home/u';
 export const REPO = '/home/u/proj';
 export const SID = 'session-1';
 export const T0 = 1_700_000_000_000;
-
-const CATALOG: [RegExp, PathClass[], string][] = [
-  [/\/\.stillwatch(\/|$)/, ['stillwatch'], 'Stillwatch data'],
-  [/\/\.git\/hooks\/|\/\.husky\//, ['git_hook'], 'Git hook'],
-  [/\/\.git\/config$|\/\.gitconfig$|\/\.gitattributes$/, ['git_config'], 'Git config'],
-  [/\/\.github\/workflows\/[^/]+\.ya?ml$/, ['ci'], 'GitHub Actions workflow'],
-  [/\/package\.json$/, ['task_runner', 'package_manifest'], 'package.json'],
-  [/\/(pnpm-lock\.yaml|package-lock\.json)$/, ['package_manifest'], 'Lockfile'],
-  [
-    /\/\.envrc$|\/\.vscode\/tasks\.json$|devcontainer\.json$|\/Makefile$/,
-    ['task_runner'],
-    'Task runner',
-  ],
-  [/\/Library\/LaunchAgents(\/|$)|^crontab$/, ['scheduled_task'], 'Scheduled task'],
-  [/\/\.zshrc$|\/\.bashrc$|\/\.ssh\/authorized_keys$/, ['startup_file'], 'Startup file'],
-  [
-    /\/\.claude\/settings(\.local)?\.json$|\/\.mcp\.json$/,
-    ['agent_config'],
-    'Claude Code settings',
-  ],
-  [/\/(CLAUDE|AGENTS)\.md$|\/\.claude\/memory\//, ['memory_note'], 'Memory note'],
-  [/\/\.env$|\/\.aws\/credentials$|\/id_rsa$/, ['secret'], 'Credentials'],
-];
-
-/** A classifier faithful to the catalog for the paths these tests use. */
-export function fakeClassify(path: string): PathClassification {
-  for (const [re, classes, label] of CATALOG) {
-    if (re.test(path)) return { classes, label, scope: path.startsWith(REPO) ? 'repo' : 'home' };
-  }
-  return { classes: [], label: null, scope: path.startsWith(REPO) ? 'repo' : 'other' };
-}
 
 export function access(
   path: string,
@@ -87,7 +59,11 @@ export class SessionBuilder {
   ts = T0;
   permissionMode: string | null = 'default';
 
-  constructor(readonly sessionId: string = SID) {}
+  readonly sessionId: string;
+
+  constructor(sessionId: string = SID) {
+    this.sessionId = sessionId;
+  }
 
   advance(ms: number): this {
     this.ts += ms;
@@ -97,7 +73,7 @@ export class SessionBuilder {
   push(
     kind: EventKind,
     data: unknown,
-    opts: { tool?: ToolCall | null; facts?: Partial<EventFacts> } = {},
+    opts: { tool?: ToolCall | null; facts?: Partial<EventFacts> | undefined } = {},
   ): StoredEvent {
     this.seq += 1;
     this.ts += 1000;
@@ -119,10 +95,17 @@ export class SessionBuilder {
       data,
       seq: this.seq,
       orderTs: this.ts,
-      facts: facts(opts.facts),
+      facts: emptyFacts(1),
       redactions: [],
       hash: `h${this.seq}`,
     } as StoredEvent;
+    event.facts =
+      opts.facts === undefined
+        ? extractFacts(event, {
+            home: HOME,
+            stillwatchHome: `${HOME}/.stillwatch`,
+          })
+        : facts(opts.facts);
     this.events.push(event);
     return event;
   }
@@ -174,7 +157,10 @@ export class SessionBuilder {
     const out: StoredEvent[] = [];
     if (outcome !== 'result_only')
       out.push(this.push('tool.pre', {}, { tool: base, facts: spec.facts }));
-    const merged = mergeFacts(spec.facts ?? {}, spec.resultFacts ?? {});
+    const merged =
+      spec.facts === undefined && spec.resultFacts === undefined
+        ? undefined
+        : mergeFacts(spec.facts ?? {}, spec.resultFacts ?? {});
     if (outcome === 'ok' || outcome === 'result_only') {
       out.push(
         this.push(
@@ -205,25 +191,20 @@ export class SessionBuilder {
       input: { file_path: path, content },
       filePath: path,
       response: { type: created ? 'create' : 'update' },
-      facts: { files: [access(path, 'write')] },
     });
   }
 
-  read(path: string, resultFacts: Partial<EventFacts> = {}): StoredEvent[] {
+  /** Reads a file; `content` becomes the tool response the agent sees. */
+  read(path: string, content = 'file content'): StoredEvent[] {
     return this.tool('Read', 'file.read', {
       input: { file_path: path },
       filePath: path,
-      facts: { files: [access(path, 'read')] },
-      resultFacts,
+      response: { file: { filePath: path, content } },
     });
   }
 
-  bash(
-    command: string,
-    f: Partial<EventFacts> = {},
-    extra: Omit<ToolSpec, 'facts'> = {},
-  ): StoredEvent[] {
-    return this.tool('Bash', 'shell', { input: { command }, command, facts: f, ...extra });
+  bash(command: string, extra: Omit<ToolSpec, 'input' | 'command'> = {}): StoredEvent[] {
+    return this.tool('Bash', 'shell', { input: { command }, command, ...extra });
   }
 }
 

@@ -116,7 +116,7 @@ const CASES: Record<string, { kind: SignalKind; hit: [string, string][]; miss: s
         'git config --global url.git@evil.example:.insteadOf https://github.com/',
         'git config url.git@evil.example:.insteadOf',
       ],
-      ['git -c core.sshCommand="ssh -i k" fetch', 'git config core.sshCommand'],
+
       ['defaults write com.apple.loginwindow LoginHook /tmp/x', 'defaults write loginwindow'],
       ['npm config set script-shell /tmp/sh', 'npm config set script-shell'],
     ],
@@ -126,6 +126,8 @@ const CASES: Record<string, { kind: SignalKind; hit: [string, string][]; miss: s
       'git config --get core.hooksPath',
       'git config --unset core.hooksPath',
       'git config get core.pager',
+      'git -c core.sshCommand="ssh -i k" fetch',
+      'git -c alias.x="!sh y" status',
       'defaults read com.apple.dock',
     ],
   },

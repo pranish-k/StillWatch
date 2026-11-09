@@ -65,6 +65,7 @@ export const secretExfiltration: RuleFn = (ctx) => {
 
   for (const { event, effective } of ctx.counted) {
     const tool = event.tool;
+    const readsSecret = effective && isSecretRead(ctx, event);
     if (effective && tool !== null && isNetworkCapable(event)) {
       const where = tool.category === 'shell' ? 'a command' : `the ${tool.name} tool`;
       const domains = networkByEvent.get(event.id)?.domains ?? [];
@@ -98,15 +99,22 @@ export const secretExfiltration: RuleFn = (ctx) => {
           }),
         );
       }
-      if (!high && firstSecretRead !== null) {
+      // A read in the same call (`cat .env | curl ...`) counts as well as an earlier one.
+      const readEvent = firstSecretRead ?? (readsSecret ? event : null);
+      if (!high && readEvent !== null) {
+        const sameCall = readEvent === event;
         for (const domain of domains) {
           if (known.has(domain) || isWellKnownDomain(domain) || isLocalDomain(domain)) continue;
           out.push(
-            eventDraft([firstSecretRead, event], {
+            eventDraft(sameCall ? [event] : [readEvent, event], {
               ruleId: 'secret.exfiltration',
               severity: 'medium',
-              title: 'New domain contacted after a secret was read',
-              reason: `After reading a secret, the agent contacted ${domain}, a domain no earlier session used. The secret could have been sent there.`,
+              title: sameCall
+                ? 'Secret read and new domain contacted in one call'
+                : 'New domain contacted after a secret was read',
+              reason: sameCall
+                ? `${where[0]?.toUpperCase() ?? ''}${where.slice(1)} read a secret and contacted ${domain}, a domain no earlier session used. The secret could have been sent there.`
+                : `After reading a secret, the agent contacted ${domain}, a domain no earlier session used. The secret could have been sent there.`,
               subject: `after-read:${domain}`,
             }),
           );
@@ -118,7 +126,7 @@ export const secretExfiltration: RuleFn = (ctx) => {
         firstInResponse.set(s.fingerprint, event);
       }
     }
-    if (firstSecretRead === null && effective && isSecretRead(ctx, event)) firstSecretRead = event;
+    if (firstSecretRead === null && readsSecret) firstSecretRead = event;
   }
   return out;
 };

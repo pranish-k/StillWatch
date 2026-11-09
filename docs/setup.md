@@ -1,6 +1,6 @@
 # Setting up Stillwatch
 
-Stillwatch is pre-alpha and not yet published to npm, so install it from source.
+Stillwatch is an alpha, published to npm as [`stillwatch`](https://www.npmjs.com/package/stillwatch).
 
 ## Requirements
 
@@ -8,7 +8,26 @@ Stillwatch is pre-alpha and not yet published to npm, so install it from source.
 - Node.js 22.13 or newer
 - Claude Code 2.1.139 or newer
 - git
-- pnpm 12, to build from source (`corepack enable` provides it; on Node 25 or newer, which no longer includes Corepack, run `npm install -g pnpm`)
+- pnpm 12, only to build from source (`corepack enable` provides it; on Node 25 or newer, which no longer includes Corepack, run `npm install -g pnpm`)
+
+## Install
+
+```sh
+npm install -g stillwatch
+stillwatch install
+```
+
+To try it without a global install, run `npx stillwatch install`, and use `npx stillwatch` wherever this guide writes `stillwatch`.
+Because npm may delete its `npx` cache at any time, install then copies the CLI and dashboard to `~/.stillwatch/app`, and the hook runs that copy.
+Running `npx stillwatch install` again replaces the copy with the version you ran.
+
+Install records the paths of the Node binary and the CLI that the hook uses to start the collector.
+When the `node` on your `PATH` is the same binary that is running, it records that path, so a Homebrew upgrade of Node does not break the hook.
+
+Start a new Claude Code session after installing.
+In interactive sessions, Claude Code runs hooks only in folders you have trusted.
+
+To upgrade, run `npm install -g stillwatch@latest`, then `stillwatch stop && stillwatch start` to restart the collector on the new version.
 
 ## Install from source
 
@@ -26,12 +45,10 @@ stillwatch install
 Install records the paths of the Node binary and the built CLI, so keep the clone where it is, or run install again after moving it.
 To skip the global install, run `node apps/cli/dist/stillwatch.mjs` wherever this guide writes `stillwatch`.
 
-Start a new Claude Code session after installing.
-In interactive sessions, Claude Code runs hooks only in folders you have trusted.
-
 ## What install changes
 
 - It creates `~/.stillwatch` (or `$STILLWATCH_HOME`) with the config, the capture hook script, and the spool.
+- When run with `npx` or `pnpm dlx`, it copies the CLI to `~/.stillwatch/app`.
 - It checks your Claude Code version, and refuses versions older than 2.1.139 unless you pass `--force`.
 - It backs up your Claude Code settings file into `~/.stillwatch/backups/`.
 - It adds one hook entry per event to the settings file, and records what it added so uninstall can remove exactly that.
@@ -127,10 +144,10 @@ Use the same `--scope` and `--project-dir` you installed with.
 
 | Problem | What to do |
 | --- | --- |
-| `stillwatch: command not found` | Run `npm install -g ./apps/cli` from the clone, or use `node apps/cli/dist/stillwatch.mjs` |
+| `stillwatch: command not found` | Run `npm install -g stillwatch`, or use `npx stillwatch`; from a clone, run `npm install -g ./apps/cli` |
 | The collector is not running | Run `stillwatch start`; it prints why if it cannot start, and `~/.stillwatch/logs/collector.log` has details |
 | Status lists missing hook events | Run `stillwatch install` again, then start a new Claude Code session |
-| You switched Node versions or moved the clone | Run `stillwatch install` again so the hook can start the collector; events are still captured meanwhile, because the hook itself does not need Node |
+| You switched Node versions, removed the global package, or moved the clone | Run `stillwatch install` again so the hook can start the collector; events are still captured meanwhile, because the hook itself does not need Node |
 | Port 7391 is in use by another program | Change `port` in `~/.stillwatch/config.json` to a free port, then run `stillwatch start` |
 | A report says the start state is unknown | The collector was not running when the session began; it starts automatically for later sessions |
 

@@ -30,25 +30,19 @@ See [the architecture document](docs/architecture.md) for details.
 
 ## Status
 
-Pre-alpha, and looking for early testers.
+Alpha, and looking for early testers.
 It works with Claude Code only, on macOS and Linux, and it only observes: it never blocks or changes what the agent does.
-It is not yet published to npm, so you install it from this repository.
 
 ## Try it
 
-You need macOS or Linux, Node.js 22.13 or newer, Claude Code 2.1.139 or newer, and git.
+You need macOS or Linux, Node.js 22.13 or newer, and Claude Code 2.1.139 or newer.
 
 ```sh
-git clone https://github.com/pranish-k/StillWatch.git
-cd StillWatch
-corepack enable           # provides the pinned pnpm; on Node 25 or newer, run: npm install -g pnpm
-pnpm install
-pnpm build
-npm install -g ./apps/cli # puts the stillwatch command on your PATH
+npm install -g stillwatch
 stillwatch install
 ```
 
-The global install links to this folder, so keep the clone where it is.
+Or run it without a global install: `npx stillwatch install`, and later `npx stillwatch open`.
 `stillwatch install` adds Stillwatch's hooks to your Claude Code settings, keeps a backup, and starts the background collector.
 
 Then:
@@ -73,7 +67,7 @@ stillwatch uninstall --purge
 npm uninstall -g stillwatch
 ```
 
-The [setup guide](docs/setup.md) covers scopes, what install changes, and troubleshooting.
+The [setup guide](docs/setup.md) covers building from source, scopes, what install changes, and troubleshooting.
 
 ## Feedback
 

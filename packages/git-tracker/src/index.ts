@@ -19,12 +19,65 @@
  *
  * Public API contract. Signatures are fixed; implementations replace the stubs.
  */
-import type {
-  RepoSurfaceSpec,
-  SessionSnapshot,
-  SnapshotDiff,
-  SurfaceSpec,
+import { resolve } from 'node:path';
+import {
+  SNAPSHOT_VERSION,
+  type RepoSnapshot,
+  type RepoSurfaceSpec,
+  type SessionSnapshot,
+  type SnapshotDiff,
+  type SurfaceSpec,
 } from '@stillwatch/schema';
+import { DEFAULTS } from './constants';
+import { Deadline } from './deadline';
+import { diffRepo } from './diff-files';
+import { diffSurface } from './diff-surface';
+import { detectGitVersion, GitRunner } from './git-runner';
+import { discoverRepo, repoRoot, type RepoInfo } from './repo-context';
+import { snapshotRepo } from './repo-snapshot';
+import { resolveRepoSurface, snapshotSurface } from './surface';
+
+const DEFAULT_GIT = 'git';
+
+/** Finds the repositories for the session directories, one per root. */
+async function snapshotRepos(
+  git: GitRunner,
+  dirs: string[],
+  maxOverlay: number,
+): Promise<RepoSnapshot[]> {
+  const found = await Promise.all(dirs.map((dir) => discoverRepo(git, dir)));
+  const infos = new Map<string, RepoInfo>();
+  const failed: RepoSnapshot[] = [];
+  found.forEach((discovery, index) => {
+    const dir = dirs[index] ?? '';
+    if (discovery.kind === 'repo') {
+      if (!infos.has(discovery.info.root)) infos.set(discovery.info.root, discovery.info);
+    } else if (discovery.kind === 'error') {
+      // The repository could not be read; the directory stands in for its root.
+      failed.push({
+        root: dir,
+        gitCommonDir: null,
+        head: null,
+        branch: null,
+        hooksPath: null,
+        overlay: {},
+        overlayTruncated: false,
+        error: discovery.message,
+      });
+    }
+  });
+  const repos = await Promise.all(
+    [...infos.values()].map((info) => snapshotRepo(git, info, maxOverlay)),
+  );
+  const roots = new Set(repos.map((repo) => repo.root));
+  const seenFailed = new Set<string>();
+  for (const repo of failed) {
+    if (roots.has(repo.root) || seenFailed.has(repo.root)) continue;
+    seenFailed.add(repo.root);
+    repos.push(repo);
+  }
+  return repos;
+}
 
 export type SnapshotOptions = {
   sessionId: string;
@@ -52,8 +105,40 @@ export type SnapshotOptions = {
 };
 
 /** Takes a snapshot. Never throws for repository or file problems; they are recorded as errors. */
-export function takeSnapshot(_options: SnapshotOptions): Promise<SessionSnapshot> {
-  return Promise.reject(new Error('not implemented: takeSnapshot'));
+export async function takeSnapshot(options: SnapshotOptions): Promise<SessionSnapshot> {
+  const now = options.now ?? Date.now;
+  const takenAt = now();
+  const startedAt = performance.now();
+  const git = new GitRunner(
+    options.gitBinary ?? DEFAULT_GIT,
+    new Deadline(options.timeoutMs ?? DEFAULTS.timeoutMs),
+  );
+  const limits = {
+    maxHashBytes: options.maxHashBytes ?? DEFAULTS.maxHashBytes,
+    maxDirChildren: options.maxDirChildren ?? DEFAULTS.maxDirChildren,
+  };
+  const dirs = [options.cwd, ...(options.extraDirs ?? [])].map((dir) => resolve(dir));
+  const [repos, homeSurface] = await Promise.all([
+    snapshotRepos(git, dirs, options.maxOverlay ?? DEFAULTS.maxOverlay),
+    snapshotSurface(options.surface, [], limits),
+  ]);
+  const repoSurface = await snapshotSurface(
+    [],
+    resolveRepoSurface(options.repoSurface, repos),
+    limits,
+  );
+  const homePaths = new Set(homeSurface.map((entry) => entry.path));
+  return {
+    v: SNAPSHOT_VERSION,
+    kind: options.kind,
+    sessionId: options.sessionId,
+    takenAt,
+    cwd: options.cwd,
+    repos,
+    surface: [...homeSurface, ...repoSurface.filter((entry) => !homePaths.has(entry.path))],
+    durationMs: Math.round(performance.now() - startedAt),
+    late: options.late ?? false,
+  };
 }
 
 export type DiffOptions = { timeoutMs?: number; gitBinary?: string; maxFiles?: number };
@@ -66,23 +151,73 @@ export type DiffOptions = { timeoutMs?: number; gitBinary?: string; maxFiles?: n
  *   Line counts come from `git diff --numstat` where both sides are available, else null.
  * - Surface: compare entries by path (hash, existence, directory children).
  */
-export function diffSnapshots(
-  _start: SessionSnapshot,
-  _end: SessionSnapshot,
-  _options?: DiffOptions,
+export async function diffSnapshots(
+  start: SessionSnapshot,
+  end: SessionSnapshot,
+  options?: DiffOptions,
 ): Promise<SnapshotDiff> {
-  return Promise.reject(new Error('not implemented: diffSnapshots'));
+  const git = new GitRunner(
+    options?.gitBinary ?? DEFAULT_GIT,
+    new Deadline(options?.timeoutMs ?? DEFAULTS.timeoutMs),
+  );
+  const maxFiles = options?.maxFiles ?? DEFAULTS.maxFiles;
+  const diff: SnapshotDiff = {
+    files: [],
+    surface: [],
+    headMoved: [],
+    commits: [],
+    truncated: false,
+    errors: [],
+  };
+  const startRepos = new Map(start.repos.map((repo) => [repo.root, repo]));
+  const pairs = end.repos.flatMap((repo) => {
+    const before = startRepos.get(repo.root);
+    return before === undefined ? [] : [{ before, after: repo }];
+  });
+  const results = await Promise.all(
+    pairs.map(async ({ before, after }) => {
+      try {
+        return await diffRepo(git, before, after, {
+          maxCommits: DEFAULTS.maxCommits,
+          maxSubjectChars: DEFAULTS.maxSubjectChars,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return { files: [], commits: [], truncated: false, errors: [`${after.root}: ${message}`] };
+      }
+    }),
+  );
+  pairs.forEach(({ before, after }, index) => {
+    if (before.head !== after.head) {
+      diff.headMoved.push({ repoRoot: after.root, from: before.head, to: after.head });
+    }
+    const result = results[index];
+    if (result === undefined) return;
+    diff.files.push(...result.files);
+    diff.commits.push(...result.commits);
+    diff.errors.push(...result.errors);
+    if (result.truncated) diff.truncated = true;
+  });
+  if (diff.files.length > maxFiles) {
+    diff.files = diff.files.slice(0, Math.max(0, maxFiles));
+    diff.truncated = true;
+  }
+  const surface = diffSurface(start.surface, end.surface);
+  diff.surface = surface.changes;
+  diff.errors.push(...surface.errors);
+  return diff;
 }
 
 /** Repository working tree root containing `dir`, or null. */
-export function findRepoRoot(
-  _dir: string,
-  _options?: { gitBinary?: string },
+export async function findRepoRoot(
+  dir: string,
+  options?: { gitBinary?: string },
 ): Promise<string | null> {
-  return Promise.reject(new Error('not implemented: findRepoRoot'));
+  const git = new GitRunner(options?.gitBinary ?? DEFAULT_GIT, new Deadline(DEFAULTS.timeoutMs));
+  return repoRoot(git, resolve(dir));
 }
 
 /** Installed git version, e.g. "2.50.1", or null when git is unavailable. */
-export function gitVersion(_gitBinary?: string): Promise<string | null> {
-  return Promise.reject(new Error('not implemented: gitVersion'));
+export function gitVersion(gitBinary?: string): Promise<string | null> {
+  return detectGitVersion(gitBinary ?? DEFAULT_GIT);
 }

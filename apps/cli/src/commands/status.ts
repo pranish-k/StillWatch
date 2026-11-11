@@ -112,6 +112,10 @@ export async function gatherStatus(ctx: Ctx): Promise<StatusJson> {
       warnings.push(
         `${plural(hooks.missing.length, 'hook event')} missing (${hooks.missing.join(', ')}). Run 'stillwatch install' again.`,
       );
+    } else if (hooks.outdated.length > 0) {
+      warnings.push(
+        `${plural(hooks.outdated.length, 'hook event')} set up by an older version (${hooks.outdated.join(', ')}), so the hooks may not restart the collector. Run 'stillwatch install' again.`,
+      );
     }
     if (!hooks.hookScriptOk) {
       warnings.push(
@@ -173,11 +177,11 @@ export async function statusCommand(ctx: Ctx, args: string[]): Promise<number> {
   const h = status.hooks;
   const total = CLAUDE_HOOK_EVENTS.length;
   lines.push([
-    h.installed && h.missing.length === 0,
+    h.installed && h.missing.length === 0 && h.outdated.length === 0,
     'Hooks',
     h.settingsPath === null
       ? 'not installed'
-      : `${h.scope ?? '?'} scope, ${h.events.length}/${total} events in ${ctx.path(h.settingsPath)}`,
+      : `${h.scope ?? '?'} scope, ${h.events.length}/${total} events in ${ctx.path(h.settingsPath)}${h.outdated.length > 0 ? `, ${h.outdated.length} from an older version` : ''}`,
   ]);
   if (h.settingsPath !== null) {
     lines.push([h.hookScriptOk, 'Hook script', h.hookScriptOk ? 'ok' : 'missing or changed']);

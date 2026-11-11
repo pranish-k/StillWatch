@@ -22,6 +22,7 @@ import {
   checkHookInstall,
   detectClaudeVersion,
   installedEvents,
+  outdatedEvents,
   planHookEntries,
   readSettingsFile,
   removeHooksFromSettings,
@@ -378,6 +379,7 @@ describe('files', () => {
     });
     expect(status.events).toEqual(CLAUDE_HOOK_EVENTS.slice(0, 3).map((s) => s.event));
     expect(status.missing).toHaveLength(CLAUDE_HOOK_EVENTS.length - 3);
+    expect(status.outdated).toEqual([]);
     expect((await checkHookInstall(installedConfig, { claudeVersion: '2.1.100' })).compatible).toBe(
       false,
     );
@@ -390,5 +392,33 @@ describe('files', () => {
       installed: false,
       events: [],
     });
+  });
+});
+
+describe('outdatedEvents', () => {
+  const hookScript = '/home/u/.stillwatch/bin/hook.sh';
+  const plans = planHookEntries({ hookScript, agent: 'claude-code', events: CLAUDE_HOOK_EVENTS });
+
+  it('lists nothing for hooks this version installed', () => {
+    const text = addHooksToSettings(null, plans).text;
+    expect(outdatedEvents(text, hookScript, plans)).toEqual([]);
+  });
+
+  it('lists events whose handler lacks --ensure-collector, as older versions wrote them', () => {
+    const text = addHooksToSettings(null, plans).text.replaceAll(
+      ',\n              "--ensure-collector"',
+      '',
+    );
+    const ensured = CLAUDE_HOOK_EVENTS.filter((s) => s.ensureCollector).map((s) => s.event);
+    expect(ensured.length).toBeGreaterThan(0);
+    expect(outdatedEvents(text, hookScript, plans)).toEqual(ensured);
+  });
+
+  it('lists an event whose async flag changed, and ignores events with no handler', () => {
+    const asyncPlan = plans.find((p) => p.async);
+    if (asyncPlan === undefined) throw new Error('no async hook in the spec');
+    const sync = { ...asyncPlan, async: false };
+    const text = addHooksToSettings(null, [sync]).text;
+    expect(outdatedEvents(text, hookScript, plans)).toEqual([asyncPlan.event]);
   });
 });

@@ -193,3 +193,32 @@ describe('the Node path the hook uses', () => {
     expect(await stableNodePath('/opt/node/bin/node', undefined)).toBe('/opt/node/bin/node');
   });
 });
+
+describe('status with hooks from an older version', () => {
+  it('warns when a hook lacks --ensure-collector, and install repairs it', async () => {
+    const cliPath = await makeBundle(join(root, 'src', 'dist'), '0.1.0');
+    expect((await run(['install', '--no-start'], { cliPath })).code).toBe(0);
+
+    const fresh = await run(['status'], { cliPath });
+    expect(fresh.out).not.toContain('older version');
+
+    // Older versions wrote the same handlers without --ensure-collector.
+    const settings = JSON.parse(await readFile(paths().settings, 'utf8')) as {
+      hooks: Record<string, { hooks: { args: string[] }[] }[]>;
+    };
+    for (const groups of Object.values(settings.hooks))
+      for (const group of groups)
+        for (const handler of group.hooks)
+          handler.args = handler.args.filter((a) => a !== '--ensure-collector');
+    await writeFile(paths().settings, JSON.stringify(settings, null, 2));
+
+    const stale = await run(['status'], { cliPath });
+    expect(stale.out).toMatch(/Hooks .*from an older version/);
+    expect(stale.out).toContain(
+      "so the hooks may not restart the collector. Run 'stillwatch install' again.",
+    );
+
+    expect((await run(['install', '--no-start'], { cliPath })).code).toBe(0);
+    expect((await run(['status'], { cliPath })).out).not.toContain('older version');
+  });
+});

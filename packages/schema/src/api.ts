@@ -87,6 +87,11 @@ export type HookInstallStatus = {
   events: string[];
   /** Hook events Stillwatch expects but did not find in the settings file. */
   missing: string[];
+  /**
+   * Found hook events whose handler differs from what this version installs,
+   * for example one written by an older version without `--ensure-collector`.
+   */
+  outdated: string[];
   hookScriptOk: boolean;
   claudeVersion: string | null;
   /** `null` when the Claude Code version could not be determined. */

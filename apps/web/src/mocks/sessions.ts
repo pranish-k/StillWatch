@@ -452,6 +452,7 @@ export function buildStatus(now: number, sessions: MockSession[]): StatusRespons
         'SessionEnd',
       ],
       missing: ['PostToolBatch'],
+      outdated: [],
       hookScriptOk: true,
       claudeVersion: '2.1.318',
       compatible: true,

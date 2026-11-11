@@ -387,6 +387,7 @@ export function hookStatus(): HookInstallStatus {
     settingsPath: '/x/settings.json',
     events: ['SessionStart'],
     missing: [],
+    outdated: [],
     hookScriptOk: true,
     claudeVersion: '2.1.318',
     compatible: true,

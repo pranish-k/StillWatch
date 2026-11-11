@@ -143,6 +143,7 @@ const UNKNOWN_HOOKS: HookInstallStatus = {
   settingsPath: null,
   events: [],
   missing: [],
+  outdated: [],
   hookScriptOk: false,
   claudeVersion: null,
   compatible: null,
@@ -172,6 +173,10 @@ async function buildStatus(
     warnings.push('Stillwatch hooks are not installed. Run `stillwatch install`.');
   else if (hooks.missing.length > 0)
     warnings.push(`Hooks are missing for: ${hooks.missing.join(', ')}.`);
+  else if (hooks.outdated.length > 0)
+    warnings.push(
+      `Hooks are from an older version for: ${hooks.outdated.join(', ')}. Run 'stillwatch install' again.`,
+    );
   const counts = p.store.counts();
   return {
     version,

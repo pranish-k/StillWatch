@@ -46,7 +46,8 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 function hooksHealth(status: StatusResponse): Health {
   const { hooks } = status;
   if (!hooks.installed || !hooks.hookScriptOk) return 'bad';
-  if (hooks.missing.length > 0 || hooks.compatible === false) return 'warn';
+  if (hooks.missing.length > 0 || hooks.outdated.length > 0 || hooks.compatible === false)
+    return 'warn';
   return 'ok';
 }
 
@@ -136,6 +137,9 @@ function StatusBody({ status, now }: { status: StatusResponse; now: number }) {
                   (missing <span className="mono">{hooks.missing.join(', ')}</span>)
                 </span>
               ) : null}
+              {hooks.outdated.length > 0 ? (
+                <span className="muted"> ({hooks.outdated.length} from an older version)</span>
+              ) : null}
             </Row>
             <Row label="Hook script">{hooks.hookScriptOk ? 'In place' : 'Missing or changed'}</Row>
             <Row label="Claude Code">
@@ -156,7 +160,10 @@ function StatusBody({ status, now }: { status: StatusResponse; now: number }) {
               )}
             </Row>
           </dl>
-          {!hooks.installed || !hooks.hookScriptOk || hooks.missing.length > 0 ? (
+          {!hooks.installed ||
+          !hooks.hookScriptOk ||
+          hooks.missing.length > 0 ||
+          hooks.outdated.length > 0 ? (
             <Command text="stillwatch install" />
           ) : null}
         </Card>

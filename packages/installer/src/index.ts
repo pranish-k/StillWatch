@@ -310,6 +310,38 @@ export function removeHooksFromSettings(
   return { text: serialize(root), changed: true, removed, emptyAfter };
 }
 
+/**
+ * Planned hook events whose Stillwatch handler in the settings text differs
+ * from the plan (arguments, async, or timeout). Events with no handler are
+ * not listed; `installedEvents` reports those as missing. Pure.
+ */
+export function outdatedEvents(
+  text: string | null,
+  hookScript: string,
+  plans: readonly HookEntryPlan[],
+): string[] {
+  const hooks = parseSettings(text).hooks;
+  if (!isRecord(hooks)) return [];
+  const out: string[] = [];
+  for (const plan of plans) {
+    const groups = hooks[plan.event];
+    if (!Array.isArray(groups)) continue;
+    const found = findHandler(groups, hookScript);
+    if (found === null) continue;
+    const handler = found.handlers[found.index];
+    if (!isRecord(handler)) continue;
+    const want = handlerFor(plan);
+    const args = Array.isArray(handler.args) ? handler.args : [];
+    const same =
+      args.length === plan.args.length &&
+      args.every((a, i) => a === plan.args[i]) &&
+      (handler.async === true) === plan.async &&
+      (handler.timeout ?? null) === (want.timeout ?? null);
+    if (!same) out.push(plan.event);
+  }
+  return out;
+}
+
 /** Hook events in the settings text whose handler runs `hookScript`. Pure. */
 export function installedEvents(text: string | null, hookScript: string): string[] {
   const root = parseSettings(text);
@@ -470,16 +502,23 @@ export async function checkHookInstall(
       settingsPath: null,
       events: [],
       missing: expected,
+      outdated: [],
       hookScriptOk: false,
       claudeVersion,
       compatible,
     };
   }
   let found = new Set<string>();
+  let outdated: string[] = [];
   try {
-    found = new Set(
-      installedEvents(await readSettingsFile(record.settingsPath), record.hookScript),
-    );
+    const text = await readSettingsFile(record.settingsPath);
+    found = new Set(installedEvents(text, record.hookScript));
+    const plans = planHookEntries({
+      hookScript: record.hookScript,
+      agent: 'claude-code',
+      events: CLAUDE_HOOK_EVENTS,
+    });
+    outdated = outdatedEvents(text, record.hookScript, plans);
   } catch {
     found = new Set();
   }
@@ -491,6 +530,7 @@ export async function checkHookInstall(
     settingsPath: record.settingsPath,
     events,
     missing,
+    outdated,
     hookScriptOk: await hookScriptLooksRight(record.hookScript),
     claudeVersion,
     compatible,

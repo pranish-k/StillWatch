@@ -214,6 +214,22 @@ describe('env-assignment', () => {
     expect(out.startsWith(prefix + '[REDACTED:env-assignment:')).toBe(true);
   });
 
+  it('redacts a letters-only password in env-file syntax', () => {
+    // Found by the redaction recall benchmark: random letters-only passwords were kept as identifiers.
+    const value = ['tgHez', 'PGlML', 'eiZB'].join('');
+    expectRedacted(`PASSWORD=${value}`, value, 'env-assignment');
+    expectRedacted(`export DB_PASSWORD=${value}`, value, 'env-assignment');
+  });
+
+  it.each([
+    'token = getToken',
+    'password = readPassword',
+    'secret: configSecret',
+    'Password=hunter',
+  ])('keeps code-like or lower-case-name assignment %s', (text) => {
+    expectUntouched(text);
+  });
+
   it('redacts a whole Cookie header value', () => {
     const out = r.redactString(`Cookie: sid=${value}; theme=dark\nnext`).value;
     expect(out).toMatch(/^Cookie: \[REDACTED:env-assignment:[0-9a-f]{8}\]\nnext$/);

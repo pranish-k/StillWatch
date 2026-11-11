@@ -19,6 +19,9 @@ const MAX_QUOTED = 4096;
 const MIN_VALUE = 6;
 const DOTTED_IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+$/;
 const WORDLIKE = /^[A-Za-z_.$-]+$/;
+const LETTERS = /^[A-Za-z]+$/;
+/** An environment variable name as env files write it: upper case, digits, and underscores. */
+const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 const COOKIE_NAME = /cookie/i;
 
 type Parsed = { span: Span | null; resume: number };
@@ -130,12 +133,20 @@ class AssignmentScanner {
     } else if (!(flag && blanksBefore > 0 && sep !== '-' && sep !== '')) {
       return none;
     }
+    // `NAME=value` with an upper-case env name and no blanks is env-file syntax, where a bare
+    // word is data, not a code identifier, so a letters-only password still counts.
+    const envFile =
+      sep === '=' &&
+      blanksBefore === 0 &&
+      !flag &&
+      ENV_NAME.test(name) &&
+      !isBlankCode(text.charCodeAt(p));
     const valueStart = p;
     while (p - valueStart < 8 && isBlankCode(text.charCodeAt(p))) p++;
-    return this.parseValue(p, COOKIE_NAME.test(name));
+    return this.parseValue(p, COOKIE_NAME.test(name), envFile);
   }
 
-  private parseValue(p: number, cookie: boolean): Parsed {
+  private parseValue(p: number, cookie: boolean, envFile = false): Parsed {
     const { text } = this;
     let quote = text.charAt(p);
     let open = p + 1;
@@ -161,7 +172,7 @@ class AssignmentScanner {
     while (end > p && isTrailingPunctuation(text.charCodeAt(end - 1))) end--;
     if (cookie) while (end > p && isWhitespaceCode(text.charCodeAt(end - 1))) end--;
     const value = text.slice(p, end);
-    if (!acceptUnquoted(value, text.charAt(resume))) return { span: null, resume };
+    if (!acceptUnquoted(value, text.charAt(resume), envFile)) return { span: null, resume };
     return { span: { start: p, end }, resume };
   }
 }
@@ -174,10 +185,11 @@ function isTrailingPunctuation(code: number): boolean {
  * Unquoted values are often code (`token = getToken()`, `secret: config.key`)
  * or prose (`auth: the system`), so only values that look like data count.
  */
-function acceptUnquoted(value: string, next: string): boolean {
+function acceptUnquoted(value: string, next: string, envFile: boolean): boolean {
   if (isPlaceholderValue(value, { minLength: MIN_VALUE })) return false;
   if (next === '(') return false;
-  if (WORDLIKE.test(value) || DOTTED_IDENTIFIER.test(value)) return false;
+  if ((WORDLIKE.test(value) && !(envFile && LETTERS.test(value))) || DOTTED_IDENTIFIER.test(value))
+    return false;
   if (value.startsWith('/') || value.startsWith('./') || value.startsWith('../')) return false;
   if (value.startsWith('~/') || value.includes('://')) return false;
   return true;

@@ -11,7 +11,7 @@
  *   report <session-id|latest> [--out <file>]
  *   delete-data (--session <id> | --older-than <days> | --all) [--yes]
  *   verify [--session <id>]
- *   lab [--scenario <id>...] [--json] [--keep]
+ *   lab [--benchmark] [--scenario <id>...] [--json] [--keep]
  *   help, --help, -h, --version, -v
  *
  * Exit codes: 0 success, 1 failure, 2 usage error.

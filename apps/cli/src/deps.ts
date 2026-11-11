@@ -45,7 +45,15 @@ export type InstallerApi = Pick<
 
 export type StorageApi = Pick<typeof storage, 'openStore' | 'installSqliteWarningFilter'>;
 export type ReportsApi = Pick<typeof reports, 'buildSessionReport' | 'renderMarkdownReport'>;
-export type LabApi = Pick<typeof lab, 'runLab' | 'renderScorecard' | 'listScenarios'>;
+export type LabApi = Pick<
+  typeof lab,
+  | 'runLab'
+  | 'renderScorecard'
+  | 'listScenarios'
+  | 'runBenchmark'
+  | 'renderBenchmark'
+  | 'listBenchmark'
+>;
 
 export type Output = { write(text: string): void; readonly isTTY: boolean };
 

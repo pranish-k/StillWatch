@@ -1,3 +1,4 @@
+import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import {
@@ -67,6 +68,9 @@ type StepContext = {
 async function runStep(ctx: StepContext, step: Step): Promise<void> {
   switch (step.kind) {
     case 'hook':
+      // A scenario that empties the hook script disables capture, as it would for real:
+      // later events are lost, and the analysis has to work with what arrived before.
+      if (await hookDisabled(ctx.hookPath)) return;
       await deliverHookPayload({
         scriptPath: ctx.hookPath,
         stillwatchHome: ctx.world.stillwatchHome,
@@ -92,6 +96,14 @@ async function runStep(ctx: StepContext, step: Step): Promise<void> {
     case 'sweep':
       await ctx.pipeline.sweep();
       return;
+  }
+}
+
+async function hookDisabled(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).size === 0;
+  } catch {
+    return true;
   }
 }
 

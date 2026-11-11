@@ -92,7 +92,7 @@ Recorded data never leaves your computer; if you share a report, read it first, 
 | `stillwatch start`, `stillwatch stop` | Starts or stops the background collector |
 | `stillwatch delete-data` | Deletes one session, old sessions, or everything |
 | `stillwatch verify` | Checks event hash chains for edits |
-| `stillwatch lab` | Runs the attack lab and prints a scorecard |
+| `stillwatch lab [--benchmark]` | Runs the attack lab, or the larger [detection benchmark](docs/benchmark/README.md), and prints a scorecard |
 
 ## What it cannot see
 
@@ -110,6 +110,7 @@ See [privacy](docs/security/privacy.md).
 
 - [Setup](docs/setup.md)
 - [Architecture](docs/architecture.md) and [decisions](docs/decisions/README.md)
+- [Detection benchmark](docs/benchmark/README.md)
 - [Threat model](docs/security/threat-model.md), [limits](docs/security/limits.md), and [privacy](docs/security/privacy.md)
 - [Development](docs/development.md)
 - [Planning documents](docs/README.md#planning)

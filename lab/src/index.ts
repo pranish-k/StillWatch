@@ -13,6 +13,12 @@
  * Public API contract. Signatures are fixed; implementations replace the stubs.
  */
 import type { RuleId, Severity } from '@stillwatch/schema';
+import {
+  renderBenchmarkText,
+  runBenchmarkScenarios,
+  selectBenchmark,
+  type BenchmarkCard,
+} from './benchmark';
 import { runScenarios } from './runner';
 import { SCENARIOS } from './scenarios';
 import { renderScorecardText } from './scorecard';
@@ -72,4 +78,36 @@ export function runLab(options?: LabOptions): Promise<Scorecard> {
 /** Plain-text scorecard for the terminal. */
 export function renderScorecard(card: Scorecard, options?: { color?: boolean }): string {
   return renderScorecardText(card, options);
+}
+
+export type {
+  BenchmarkCard,
+  BenchmarkResult,
+  BenchmarkStatus,
+  SetTally,
+  TacticTally,
+  Tactic,
+} from './benchmark/types';
+
+export type BenchmarkScenarioInfo = ScenarioInfo & { tactic: string | null; source: string };
+
+/** The detection benchmark's scenarios: a larger attack set where misses are reported, not failed. */
+export function listBenchmark(): BenchmarkScenarioInfo[] {
+  return selectBenchmark(undefined).map(({ id, title, category, description, tactic, source }) => ({
+    id,
+    title,
+    category,
+    description,
+    tactic,
+    source,
+  }));
+}
+
+export function runBenchmark(options?: LabOptions): Promise<BenchmarkCard> {
+  return runBenchmarkScenarios(selectBenchmark(options?.scenarios), options);
+}
+
+/** Plain-text benchmark scorecard for the terminal. */
+export function renderBenchmark(card: BenchmarkCard, options?: { color?: boolean }): string {
+  return renderBenchmarkText(card, options);
 }

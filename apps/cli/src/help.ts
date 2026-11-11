@@ -98,15 +98,21 @@ export const COMMAND_HELP: Record<string, CommandHelp> = {
     examples: ['stillwatch verify', 'stillwatch verify --session latest'],
   },
   lab: {
-    usage: 'stillwatch lab [--scenario <id>]... [--json] [--keep]',
+    usage: 'stillwatch lab [--benchmark] [--scenario <id>]... [--json] [--keep]',
     summary: 'Run the attack lab in temporary directories and print a scorecard.',
     details: [
+      '--benchmark       Run the larger detection benchmark instead; misses are reported, not failed',
       '--scenario <id>   Run only this scenario (repeatable)',
       '--json            Print the scorecard as JSON',
       '--keep            Keep the temporary directories for inspection',
       'Exits 1 when an attack is missed, a normal scenario is noisy, or a scenario fails.',
+      'With --benchmark, exits 1 only when a scenario fails to run.',
     ],
-    examples: ['stillwatch lab', 'stillwatch lab --scenario git-hook --keep'],
+    examples: [
+      'stillwatch lab',
+      'stillwatch lab --scenario git-hook --keep',
+      'stillwatch lab --benchmark',
+    ],
   },
 };
 

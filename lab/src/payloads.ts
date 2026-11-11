@@ -455,7 +455,7 @@ export class ClaudeSession {
     return this;
   }
 
-  stop(message: string): this {
+  stop(message: string, options: { backgroundTasks?: JsonObject[] } = {}): this {
     this.script.hook({
       ...this.base(),
       ...this.turn(),
@@ -463,7 +463,7 @@ export class ClaudeSession {
       hook_event_name: 'Stop',
       stop_hook_active: false,
       last_assistant_message: message,
-      background_tasks: [],
+      background_tasks: options.backgroundTasks ?? [],
       session_crons: [],
     });
     this.promptId = null;

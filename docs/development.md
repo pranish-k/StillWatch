@@ -42,6 +42,7 @@ pnpm check
 | `pnpm format` | Prettier (Markdown is formatted by hand) |
 | `pnpm build` | Builds the dashboard, then bundles the CLI into `apps/cli/dist/stillwatch.mjs` |
 | `pnpm lab` | Builds and runs the attack lab |
+| `pnpm benchmark` | Builds and runs the [detection benchmark](benchmark/README.md); misses are reported, not failed |
 | `VITE_STILLWATCH_MOCK=1 pnpm --filter @stillwatch/web dev` | Runs the dashboard with mock sessions and no collector; add `?mock=empty`, `?mock=offline`, or `?mock=signed-out` to see those states |
 
 ## Testing rules
@@ -60,7 +61,7 @@ pnpm check
 2. Add its definition to `RULES` in `packages/rules`, with a plain-English title, description, and default severity.
 3. Implement it so every finding explains itself and cites its events, paths, or artifacts.
 4. Add a positive test and a normal-use test.
-5. Add a lab scenario if it covers an attack class.
+5. Add a lab scenario if it covers an attack class, and check the [detection benchmark](benchmark/README.md); never tune on its held-out set.
 6. Add it to the rules table in the [detailed spec](planning/detailed-spec.md).
 7. Bump `ANALYSIS_VERSION` when the change alters stored analysis results.
 

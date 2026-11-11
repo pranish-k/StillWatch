@@ -9,7 +9,7 @@ import { capText } from './text';
 type Pattern = { re: RegExp; kind: 'prompt_injection'; confidence: Signal['confidence'] };
 
 const AGENT = String.raw`(?:ai\s+(?:agents?|assistants?|models?)|assistants?|agents?|claude|codex|llms?|language\s+models?)`;
-const VERB = String.raw`(?:run|execute|curl|wget|download|install|write|delete|remove|send|upload|exfiltrate)`;
+const VERB = String.raw`(?:run|execute|curl|wget|download|install|write|delete|remove|send|upload|exfiltrate|append|copy|paste|push|disable|post|forward)`;
 const MODAL = String.raw`(?:must|should|shall|needs?\s+to|ha(?:ve|s)\s+to|(?:are|is)\s+(?:required|instructed)\s+to|will\s+now|now)`;
 
 function p(source: string, confidence: Signal['confidence']): Pattern {
@@ -52,6 +52,20 @@ const PATTERNS: Pattern[] = [
   ),
   p(
     String.raw`\bwithout\s+(?:asking|telling|informing|notifying|alerting|confirming\s+with|consulting)\s+(?:the\s+)?user\b`,
+    'medium',
+  ),
+  // Redirecting the task away from what the user asked.
+  p(
+    String.raw`\b(?:ignore|disregard|forget)\s+(?:the\s+)?user(?:['’]s)?\s+(?:request|instructions?|question|task|prompt)\b`,
+    'high',
+  ),
+  // Addressing an agent, then asking for an action later in the same line: "AI agents: ... run X".
+  p(String.raw`\b${AGENT}\b[^\n:]{0,40}:[^\n]{0,160}?\b(?:please\s+)?${VERB}\b`, 'medium'),
+  // An @-mention of an agent followed by an action, as in issue and pull request text.
+  p(String.raw`@(?:claude|codex|copilot|gemini|cursor|devin)\b[^\n]{0,200}?\b${VERB}\b`, 'medium'),
+  // Claimed approval that tells the agent not to check with anyone.
+  p(
+    String.raw`\bno\s+need\s+to\s+(?:confirm|ask|check)\s+with\s+(?:anyone|anybody|the\s+user|them)\b`,
     'medium',
   ),
 ];
@@ -133,6 +147,72 @@ function scanComments(text: string, list: SignalList): void {
   }
 }
 
+const HIDDEN_STYLE =
+  /<([a-z][a-z0-9]{0,10})\b[^>]{0,200}?style\s*=\s*["'][^"'>]{0,200}?(?:display\s*:\s*none|visibility\s*:\s*hidden|font-size\s*:\s*0(?![.\d]*[1-9])|opacity\s*:\s*0(?![.\d]*[1-9]))[^>]{0,200}>([^<]{1,600})/gi;
+const MAX_HIDDEN_ELEMENTS = 16;
+
+/** Text inside HTML elements styled to be invisible, when it reads like an instruction. */
+function scanHiddenHtml(text: string, list: SignalList): void {
+  HIDDEN_STYLE.lastIndex = 0;
+  let n = 0;
+  for (
+    let m = HIDDEN_STYLE.exec(text);
+    m !== null && n < MAX_HIDDEN_ELEMENTS;
+    m = HIDDEN_STYLE.exec(text)
+  ) {
+    n++;
+    const body = m[2] ?? '';
+    if (COMMENT_VERB.test(body) && (COMMENT_AGENT.test(body) || COMMENT_IMPERATIVE.test(body))) {
+      list.add('hidden_text', `hidden HTML: ${body}`, 'high');
+    }
+  }
+}
+
+/** True when every character is printable ASCII, a tab, or a line break. */
+function isPrintableText(text: string): boolean {
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (!(c === 9 || c === 10 || c === 13 || (c >= 32 && c <= 126))) return false;
+  }
+  return true;
+}
+
+const BASE64_TOKEN = /[A-Za-z0-9+/]{24,2048}={0,2}/g;
+const MAX_DECODED_TOKENS = 8;
+const DECODED_COMMAND =
+  /\b(?:curl|wget)\b[^\n]{0,200}\|\s*(?:ba|z|da)?sh\b|\b(?:ba)?sh\s+-c\s|\beval\s|\bnc\s+-|\brm\s+-rf\s|\bchmod\s+\+x\s/;
+
+/**
+ * Base64 strings that decode to a shell command or to instruction-like text:
+ * a way to slip an instruction past a reader and past plain-text checks.
+ */
+function scanEncoded(text: string, list: SignalList): void {
+  BASE64_TOKEN.lastIndex = 0;
+  let n = 0;
+  for (
+    let m = BASE64_TOKEN.exec(text);
+    m !== null && n < MAX_DECODED_TOKENS;
+    m = BASE64_TOKEN.exec(text)
+  ) {
+    const token = m[0];
+    if (token.length % 4 === 1) continue;
+    n++;
+    const decoded = Buffer.from(token, 'base64').toString('latin1');
+    // Only printable text can be an instruction; hashes and keys decode to binary.
+    if (!isPrintableText(decoded)) continue;
+    // Fixed details: decoded text never went through redaction, so none of it is kept.
+    if (DECODED_COMMAND.test(decoded)) {
+      list.add('prompt_injection', 'base64 text that decodes to a shell command', 'high');
+      continue;
+    }
+    const inner = new SignalList('data');
+    scanPatterns(decoded, inner, '');
+    if (inner.out.length > 0) {
+      list.add('prompt_injection', 'base64 text that decodes to instruction-like text', 'high');
+    }
+  }
+}
+
 /** Scans for invisible characters and returns text hidden in Unicode tag characters. */
 function scanInvisible(text: string, list: SignalList): string {
   let zeroRun = 0;
@@ -183,6 +263,8 @@ export function findInjection(text: string, source: FactSource): Signal[] {
   const visible = text.replace(INVISIBLE, '');
   scanPatterns(visible, list, '');
   scanComments(visible, list);
+  scanHiddenHtml(visible, list);
+  scanEncoded(visible, list);
   if (hidden !== '') scanPatterns(hidden, list, 'hidden: ');
   return list.out;
 }

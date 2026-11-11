@@ -24,6 +24,7 @@ export const RULE_IDS = [
   'memory.note_loaded',
   'session.interrupted_with_changes',
   'safety.bypass',
+  'safety.destructive',
   'package.new',
   'prompt_injection.possible',
   'evidence.unattributed_change',

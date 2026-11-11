@@ -1,26 +1,49 @@
 /** Secrets: reading credentials and sending them off the computer. */
-import type { StoredEvent } from '@stillwatch/schema';
+import { baseName, type StoredEvent } from '@stillwatch/schema';
 import type { RuleContext } from '../context';
 import { isLocalDomain, isNetworkCapable, isWellKnownDomain } from '../domains';
 import type { FindingDraft, RuleFn } from '../findings';
+import { requestNames } from '../scope';
 import { actionSignals, eventDraft, show } from './common';
 
-/** Medium: reads of secret-class paths and commands that print credentials. */
+/**
+ * Medium: reads of secret-class paths, commands that print credentials, and
+ * secrets that show up in any tool output. Low when the user named the file.
+ */
 export const secretRead: RuleFn = (ctx) => {
   const out: FindingDraft[] = [];
+  const flagged = new Set<StoredEvent>();
   for (const a of ctx.accesses) {
     if (!a.effective || a.access.op !== 'read' || !a.classification.classes.includes('secret')) {
       continue;
     }
+    flagged.add(a.event);
     const label = a.classification.label === null ? '' : ` (${a.classification.label})`;
+    const name = baseName(a.access.path);
+    const named = requestNames(ctx.requests, a.event.ts, name);
     out.push(
       eventDraft([a.event], {
         ruleId: 'secret.read',
-        severity: 'medium',
+        severity: named ? 'low' : 'medium',
         title: 'Secret file read',
-        reason: `The agent read ${show(ctx, a.access.path)}${label}, which holds credentials. Its contents are now in the agent context.`,
+        reason: `The agent read ${show(ctx, a.access.path)}${label}, which holds credentials. Its contents are now in the agent context.${named ? ` The user asked about ${name} by name.` : ''}`,
         subject: a.key,
         paths: [a.access.path],
+      }),
+    );
+  }
+  for (const s of actionSignals(ctx, 'credential_command')) flagged.add(s.event);
+  for (const { event, effective } of ctx.counted) {
+    if (!effective || flagged.has(event)) continue;
+    const fp = event.facts.secrets.find((x) => x.where === 'tool.response');
+    if (fp === undefined) continue;
+    out.push(
+      eventDraft([event], {
+        ruleId: 'secret.read',
+        severity: 'medium',
+        title: 'Secret in tool output',
+        reason: `A secret (${fp.detector}) appeared in the output of ${event.tool?.name ?? 'a tool'}, so it is now in the agent context.`,
+        subject: `output:${fp.fingerprint}`,
       }),
     );
   }
@@ -99,6 +122,31 @@ export const secretExfiltration: RuleFn = (ctx) => {
           }),
         );
       }
+      // Uploading a secret file is exfiltration wherever it goes, even to a well-known host.
+      if (!high && readsSecret && isUpload(event)) {
+        high = true;
+        out.push(
+          eventDraft([event], {
+            ruleId: 'secret.exfiltration',
+            severity: 'high',
+            title: 'Secret file uploaded',
+            reason: `${where[0]?.toUpperCase() ?? ''}${where.slice(1)} read a secret file and uploaded it${to}.`,
+            subject: `upload:${event.id}`,
+          }),
+        );
+      }
+      if (!high && readsSecret && domains.length === 0) {
+        high = true;
+        out.push(
+          eventDraft([event], {
+            ruleId: 'secret.exfiltration',
+            severity: 'medium',
+            title: 'Secret read by a network command',
+            reason: `${where[0]?.toUpperCase() ?? ''}${where.slice(1)} read a secret and can reach the network, so the secret could have been sent.`,
+            subject: `network-read:${event.id}`,
+          }),
+        );
+      }
       // A read in the same call (`cat .env | curl ...`) counts as well as an earlier one.
       const readEvent = firstSecretRead ?? (readsSecret ? event : null);
       if (!high && readEvent !== null) {
@@ -130,3 +178,38 @@ export const secretExfiltration: RuleFn = (ctx) => {
   }
   return out;
 };
+
+/** Commands that send a local file somewhere: gists, release assets, scp, form or file uploads. */
+function isUpload(event: StoredEvent): boolean {
+  return event.facts.commands.some((c) => {
+    const a = c.args;
+    switch (c.program) {
+      case 'gh':
+        return (
+          (a[0] === 'gist' && (a[1] === 'create' || a[1] === 'new' || a[1] === 'edit')) ||
+          (a[0] === 'release' && (a[1] === 'upload' || a[1] === 'create'))
+        );
+      case 'scp':
+      case 'sftp':
+      case 'rsync':
+        return a.some((x) => /^[^/\s]*[^/\\]:/.test(x));
+      case 'curl':
+        return a.some(
+          (x, i) =>
+            x === '-F' ||
+            x === '--form' ||
+            x === '-T' ||
+            x === '--upload-file' ||
+            (/^(?:-d|--data(?:-binary|-raw|-urlencode)?)$/.test(x) &&
+              (a[i + 1] ?? '').startsWith('@')) ||
+            /^--data(?:-binary|-urlencode)?=@/.test(x),
+        );
+      case 'wget':
+        return a.some((x) => x.startsWith('--post-file'));
+      case 'aws':
+        return a[0] === 's3' && (a[1] === 'cp' || a[1] === 'sync' || a[1] === 'mv');
+      default:
+        return false;
+    }
+  });
+}

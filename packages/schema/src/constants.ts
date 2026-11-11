@@ -4,9 +4,9 @@
  */
 
 /** Version of `EventFacts` produced by `@stillwatch/facts`. */
-export const FACTS_VERSION = 1;
+export const FACTS_VERSION = 2;
 /** Version of the analysis output produced by `@stillwatch/rules`. */
-export const ANALYSIS_VERSION = 1;
+export const ANALYSIS_VERSION = 2;
 /** Version of `SessionReport` produced by `@stillwatch/reports`. */
 export const REPORT_VERSION = 1;
 /** Version of `SessionSnapshot` produced by `@stillwatch/git-tracker`. */

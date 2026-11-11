@@ -2,7 +2,15 @@
 import { noteContentConcerns } from '../content';
 import type { FindingDraft, RuleFn } from '../findings';
 import { noteLoads } from '../links';
-import { changeDraft, changesWith, contentOf, eventDraft, show, verb } from './common';
+import {
+  changeDraft,
+  changesWith,
+  commandTextOf,
+  contentOf,
+  eventDraft,
+  show,
+  verb,
+} from './common';
 
 /** Low; medium when the content carries injection, hidden text, shell commands, or URLs. */
 export const noteWritten: RuleFn = (ctx) =>
@@ -18,7 +26,7 @@ export const noteWritten: RuleFn = (ctx) =>
           concerns.push('hidden text');
       }
     }
-    const content = contentOf(c);
+    const content = contentOf(c) ?? commandTextOf(c);
     if (content !== null) for (const k of noteContentConcerns(content)) concerns.push(k);
     const base = `The agent ${verb(c) === 'deleted' ? 'deleted' : 'wrote'} ${show(ctx, c.path)}, which later sessions load as instructions or memory.`;
     return changeDraft(ctx, c, {

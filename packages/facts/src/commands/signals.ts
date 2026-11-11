@@ -29,7 +29,16 @@ const NETWORK_PROGRAMS = new Set([
   'netcat',
   'socat',
   'aria2c',
+  'gh',
+  'dig',
+  'nslookup',
+  'host',
+  'drill',
 ]);
+
+/** Shell history files: deleting one destroys the record of earlier commands. */
+const HISTORY_FILE =
+  /^(?:\.(?:zsh|bash|sh|ksh|python|node_repl|psql|mysql|sqlite)_history|\.?history|fish_history|\.zhistory)$/;
 const GIT_NETWORK = new Set(['clone', 'fetch', 'pull', 'push', 'ls-remote']);
 const GIT_VERIFY_SKIPPABLE = new Set([
   'commit',
@@ -103,7 +112,9 @@ export function commandSignals(
       continue;
     }
     envBypass(v.assignments, emit);
+    historyAssignments(v.assignments, emit);
     if (v.sudo) emit('privilege', v.wrappers.includes('doas') ? 'doas' : 'sudo', 'high');
+    detached(views, v, emit);
     const fetcher = pipedFetcher(views, v);
     if (fetcher !== null) emit('pipe_to_shell', `${fetcher} | ${v.program}`, 'high');
     network(v, emit);
@@ -116,7 +127,15 @@ export function commandSignals(
         v.values.filter((a) => a.includes('=')),
         emit,
       );
+      historyAssignments(
+        v.values.filter((a) => a.includes('=')),
+        emit,
+      );
     }
+    if (v.program === 'unset' && v.values.includes('HISTFILE'))
+      emit('destructive', 'shell history disabled', 'high');
+    if (v.program === 'history' && v.values.some((a) => /^-[a-z]*c/.test(a)))
+      emit('destructive', 'shell history cleared', 'high');
     tampering(v, emit);
   }
 }
@@ -126,6 +145,22 @@ export function isPipedToShell(views: readonly CommandView[], v: CommandView): b
   return pipedFetcher(views, v) !== null;
 }
 
+/** The code source a command stands for: a network fetcher, or a decoder that hides the code it emits. */
+function codeSource(v: CommandView | undefined): string | null {
+  if (v === undefined) return null;
+  if (FETCHERS.has(v.program)) return v.program;
+  if (v.program === 'base64' && v.values.some((a) => a === '-d' || a === '-D' || a === '--decode'))
+    return 'base64 -d';
+  if (v.program === 'xxd' && v.values.some((a) => a.startsWith('-r'))) return 'xxd -r';
+  if (
+    v.program === 'openssl' &&
+    v.values.includes('-d') &&
+    v.values.some((a) => a === 'base64' || a === 'enc')
+  )
+    return 'openssl -d';
+  return null;
+}
+
 function pipedFetcher(views: readonly CommandView[], v: CommandView): string | null {
   const runsCode =
     isInterpreter(v.program) || v.program === 'eval' || v.program === 'source' || v.program === '.';
@@ -133,8 +168,8 @@ function pipedFetcher(views: readonly CommandView[], v: CommandView): string | n
   const words: Word[] = [...v.args, ...v.cmd.redirects.map((r) => r.target)];
   for (const w of words) {
     for (const s of w.subst) {
-      const p = views[s]?.program;
-      if (p !== undefined && FETCHERS.has(p)) return p;
+      const source = codeSource(views[s]);
+      if (source !== null) return source;
     }
   }
   if (!readsStdin(v)) return null;
@@ -142,10 +177,36 @@ function pipedFetcher(views: readonly CommandView[], v: CommandView): string | n
   for (let hops = 0; j !== null && hops < views.length; hops++) {
     const up = views[j];
     if (up === undefined) break;
-    if (FETCHERS.has(up.program)) return up.program;
+    const source = codeSource(up);
+    if (source !== null) return source;
     j = up.cmd.pipedFrom;
   }
   return null;
+}
+
+const isDetacher = (v: CommandView): boolean =>
+  v.program === 'disown' || v.wrappers.some((w) => w === 'nohup' || w === 'setsid');
+
+/**
+ * Processes started so they outlive the session: nohup, setsid, or disown
+ * (high), or a plain `&` (low). Commands inside a backgrounded script inherit
+ * its `&`, so a plain `&` is reported once per command line, and not at all
+ * when a detacher already covers it.
+ */
+function detached(views: readonly CommandView[], v: CommandView, emit: Emit): void {
+  const wrapper = v.wrappers.find((w) => w === 'nohup' || w === 'setsid');
+  if (wrapper !== undefined) emit('background_process', `${wrapper} ${v.program}`, 'high');
+  else if (v.program === 'disown') emit('background_process', 'disown', 'high');
+  else if (v.cmd.background && !views.some(isDetacher))
+    emit('background_process', 'command run in the background with &', 'low');
+}
+
+/** HISTFILE=/dev/null, HISTSIZE=0, and similar assignments that stop history being kept. */
+function historyAssignments(assignments: readonly string[], emit: Emit): void {
+  for (const a of assignments) {
+    if (/^HISTFILE=(?:\/dev\/null)?$/.test(a) || /^(?:HISTSIZE|SAVEHIST|HISTFILESIZE)=0$/.test(a))
+      emit('destructive', 'shell history disabled', 'high');
+  }
 }
 
 /** An interpreter reads its program from stdin when given no script operand, `-`, or `-s`. */
@@ -659,6 +720,9 @@ function echoSecret(v: CommandView, emit: Emit): void {
 /** Recursive deletes of a root, the home directory, a top-level directory, everything in cwd, or `.git`. */
 function rmBroad(v: CommandView, emit: Emit, context: SignalContext): void {
   const items: ArgItem[] = parseArgs(v.args);
+  if (operandsOf(items).some((w) => HISTORY_FILE.test(w.value.split('/').at(-1) ?? ''))) {
+    emit('destructive', 'shell history deleted', 'high');
+  }
   if (!hasOpt(items, '-r', '-R', '--recursive')) return;
   for (const w of operandsOf(items)) {
     const raw = w.raw.replace(/^["']|["']$/g, '');

@@ -96,8 +96,10 @@ export const SIGNAL_KINDS = [
   'package_change',
   /** Touching Stillwatch's own files or processes, or editing hook settings. */
   'monitor_tampering',
-  /** Broad deletes, git reset --hard, git clean -fdx, force pushes. */
+  /** Broad deletes, git reset --hard, git clean -fdx, force pushes, clearing shell history. */
   'destructive',
+  /** A process detached from the session so it outlives it: nohup, setsid, disown. */
+  'background_process',
 ] as const;
 export type SignalKind = (typeof SIGNAL_KINDS)[number];
 

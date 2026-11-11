@@ -79,6 +79,7 @@ const WRAPPERS = new Map<string, WrapperSpec>([
     }),
   ],
   ['nohup', spec({})],
+  ['setsid', spec({})],
   ['time', spec({ short: 'fo', long: ['--format', '--output'] })],
   ['nice', spec({ short: 'n', long: ['--adjustment'] })],
   [

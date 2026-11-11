@@ -7,6 +7,7 @@ import {
   interruptedWithChanges,
   packageNew,
   safetyBypass,
+  safetyDestructive,
 } from './behavior';
 import { unattributedChange } from './evidence';
 import { promptInjection } from './injection';
@@ -29,6 +30,7 @@ export const RULE_FUNCTIONS: Readonly<Record<RuleId, RuleFn>> = {
   'memory.note_loaded': noteLoaded,
   'session.interrupted_with_changes': interruptedWithChanges,
   'safety.bypass': safetyBypass,
+  'safety.destructive': safetyDestructive,
   'package.new': packageNew,
   'prompt_injection.possible': promptInjection,
   'evidence.unattributed_change': unattributedChange,

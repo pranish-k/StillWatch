@@ -107,6 +107,14 @@ export const RULE_DEFINITIONS: readonly RuleDefinition[] = [
     category: 'behavior',
   },
   {
+    id: 'safety.destructive',
+    title: 'Destructive command run',
+    description:
+      'The agent ran a command that destroys work or evidence: a force push, git reset --hard, a broad delete, wiping a disk, or clearing shell history.',
+    defaultSeverity: 'medium',
+    category: 'behavior',
+  },
+  {
     id: 'package.new',
     title: 'New package added',
     description:

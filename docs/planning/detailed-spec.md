@@ -169,25 +169,26 @@ This is how the first version detects dead sessions.
 
 | Rule | Trigger | Default severity |
 | --- | --- | --- |
-| `secret.read` | Access to `.env` files, SSH keys, or cloud credentials, or a command that prints credentials | Medium |
-| `secret.exfiltration` | A redacted secret appears in a network command or fetch, or a secret read is followed by a new outbound domain | High (Medium for a new domain after a secret read) |
+| `secret.read` | Access to `.env` files, SSH keys, cloud credentials, or browser cookie stores, a command that prints credentials, or a secret in any tool output | Medium (Low when the user named the file) |
+| `secret.exfiltration` | A redacted secret appears in a network command or fetch, a secret file is uploaded (gist, release asset, scp, form or file upload), or a secret read is followed by a new outbound domain or happens inside a network command | High (Medium for a new domain after a secret read, or a secret read inside a network command with no named domain) |
 | `persistence.git_hook` | A file in `.git/hooks` or `core.hooksPath` changes, or the hooks path is set | High (Medium when requested) |
 | `persistence.git_config` | Git config gains filters, aliases, fsmonitor, sshCommand, pager, or credential helper settings | High |
 | `persistence.ci` | A CI pipeline file changes | High (Medium when requested) |
-| `persistence.task_runner` | `package.json` scripts, `.vscode/tasks.json`, devcontainer, Makefile, or `.envrc` changes | Medium (High for code that runs on install or on folder open) |
+| `persistence.task_runner` | `package.json` scripts, `.vscode/tasks.json`, devcontainer, Makefile, `conftest.py`, package index config, or `.envrc` changes | Low for plain edits, Medium when the content names a URL or is unknown, High when it downloads or runs code, or runs on install, folder open, or every pytest run |
 | `persistence.scheduled_task` | A cron, launchd, systemd, or `at` entry is added or changed | High |
-| `persistence.startup_file` | A shell profile, ssh `rc`, ssh config, or `authorized_keys` changes | High |
+| `persistence.startup_file` | A shell profile, ssh `rc`, ssh config, `authorized_keys`, Python startup hook, or a program in `~/.local/bin` or `~/bin` named like a system command changes | High |
 | `agent.config_changed` | Agent settings, hooks, permissions, MCP servers, agents, commands, or skills change | High (Medium when requested) |
 | `memory.note_written` | A file that agents load as memory changes | Low (Medium if it contains commands or instructions) |
 | `memory.note_loaded` | A note an earlier session wrote is loaded into this one | Low |
 | `session.interrupted_with_changes` | An interrupted session left changes | Medium |
-| `safety.bypass` | Checks are skipped, the sandbox is disabled, TLS verification is turned off, or network content is piped to a shell | High |
-| `package.new` | A dependency or global package is added | Medium |
+| `safety.bypass` | Checks are skipped, the sandbox is disabled, TLS verification is turned off, or network or base64-decoded content is piped to a shell | High |
+| `safety.destructive` | A force push, `git reset --hard`, broad delete, disk wipe, or clearing of shell history | Medium (High for force pushes, broad deletes, and disk wipes) |
+| `package.new` | A dependency or global package is added, or a lockfile is hand-edited to resolve from an unusual host | Medium (Low when the user named the package or it only ran once with npx; High for a redirected lockfile) |
 | `prompt_injection.possible` | Untrusted content contains instructions aimed at an agent, or hidden text | Medium (High when a high-risk action follows) |
 | `evidence.unattributed_change` | A file changed and no recorded action explains it | Low (Medium for persistent locations) |
 | `network.new_domain` | A domain that no earlier session contacted | Low |
 | `monitor.tampering` | Stillwatch's own files, hooks, or processes are touched | High |
-| `background.left_running` | A background task was still running when the session ended | Low |
+| `background.left_running` | A background task was still running when the session ended, or a process was detached with `nohup`, `setsid`, or `disown` | Low (Medium for detached processes) |
 
 Every rule needs a positive test and a normal-use test.
 A rule that fires too often should be fixed or removed.

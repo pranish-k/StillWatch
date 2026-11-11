@@ -109,6 +109,10 @@ function jsManager(manager: string, items: ArgItem[]): PackageChange | null {
     return change(manager, global ? 'global' : 'add', rest);
   }
   if (NPM_CI.has(sub)) return change(manager, 'install', []);
+  // These rewrite the manifest and lockfile without naming a new package.
+  if (sub === 'audit' && ops[1] === 'fix') return change(manager, 'update', []);
+  if (sub === 'dedupe' || sub === 'ddp') return change(manager, 'update', []);
+  if (sub === 'prune') return change(manager, 'remove', []);
   if (REMOVE.has(sub)) return change(manager, 'remove', rest);
   if (UPDATE.has(sub)) return change(manager, 'update', rest);
   return null;
@@ -176,7 +180,10 @@ export function packageChange(v: CommandView): PackageChange | null {
     return jsManager(program, parseArgs(v.args, { short: 'wC', long: JS_VALUE_OPTS }));
   }
   if (program === 'npx' || program === 'bunx' || program === 'pnpx' || program === 'uvx') {
-    const items = parseArgs(v.args, {
+    // Options after the package name belong to the program it runs (`npx tsc -p .`), not to npx.
+    const at = v.args.findIndex((w) => !w.value.startsWith('-'));
+    const own = at === -1 ? v.args : v.args.slice(0, at + 1);
+    const items = parseArgs(own, {
       short: 'pc',
       long: ['--package', '--call', '--from', '--with'],
     });

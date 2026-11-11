@@ -46,12 +46,62 @@ export function contentOf(change: PathChange): string | null {
   return parts.length > 0 ? parts.join('\n') : null;
 }
 
+/** Shell commands behind a path change, for content checks when no tool wrote the text. */
+export function commandTextOf(change: PathChange): string | null {
+  const parts: string[] = [];
+  for (const w of change.writes) {
+    const command = w.event.tool?.input.command;
+    if (w.access.via !== 'tool' && typeof command === 'string') parts.push(command);
+  }
+  return parts.length > 0 ? parts.join('\n') : null;
+}
+
+/**
+ * git subcommands that bring other commits into the working tree. Checkout,
+ * switch, reset, and stash are left out on purpose: they can surface a file the
+ * agent planted some other way, and must not lower its finding.
+ */
+const GIT_HISTORY = new Set(['pull', 'merge', 'rebase', 'am', 'cherry-pick']);
+
+/** True for a git command that brings other commits into the working tree (pull, merge, rebase). */
+export function isGitHistoryCommand(program: string, args: readonly string[]): boolean {
+  if (program !== 'git') return false;
+  const sub = args.find((a) => !a.startsWith('-'));
+  return sub !== undefined && GIT_HISTORY.has(sub);
+}
+
+/**
+ * True when the only thing explaining a change is a git command that brought
+ * in existing commits, so the content came from repository history rather
+ * than from something the agent wrote.
+ */
+function fromGitHistory(ctx: RuleContext, change: PathChange): boolean {
+  if (
+    change.writes.length > 0 ||
+    change.attribution !== 'shell' ||
+    change.attributionEventIds.length === 0 ||
+    change.diff?.committed !== true
+  )
+    return false;
+  return change.attributionEventIds.every((id) => {
+    const event = ctx.events.find((e) => e.id === id);
+    return event?.facts.commands.some((c) => isGitHistoryCommand(c.program, c.args)) === true;
+  });
+}
+
 /** A draft for a path change, citing its writes, attribution, and snapshots. */
 export function changeDraft(
   ctx: RuleContext,
   change: PathChange,
   fields: { ruleId: RuleId; severity: Severity; title: string; reason: string; subject?: string },
 ): FindingDraft {
+  if (fromGitHistory(ctx, change) && fields.severity !== 'low') {
+    fields = {
+      ...fields,
+      severity: 'low',
+      reason: `${fields.reason} It arrived through a git command that brought in existing commits, so it came from the repository's history, not from a file the agent wrote.`,
+    };
+  }
   const events = change.writes.map((w) => w.event);
   const eventIds = events.map((e) => e.id);
   for (const id of change.attributionEventIds) if (!eventIds.includes(id)) eventIds.push(id);

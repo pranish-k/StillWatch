@@ -25,11 +25,13 @@ const DEVCONTAINER_COMMAND =
 
 /**
  * Why a task-runner change runs code without anyone asking, or null.
- * `.envrc` always qualifies: direnv runs it on entering the directory.
+ * `.envrc` always qualifies: direnv runs it on entering the directory, and
+ * pytest imports every conftest.py it finds.
  */
 export function autoRunReason(path: string, content: string | null): string | null {
   const name = baseName(path);
   if (name === '.envrc') return 'direnv runs .envrc whenever a shell enters the directory';
+  if (name === 'conftest.py') return 'pytest imports conftest.py automatically on every test run';
   if (content === null) return null;
   if (name === 'package.json') {
     const m = INSTALL_SCRIPT.exec(content);
@@ -46,7 +48,22 @@ export function autoRunReason(path: string, content: string | null): string | nu
 }
 
 const SHELL_IN_NOTE =
-  /```(?:sh|bash|zsh|shell|console)\b|^\s*\$ \S|\b(?:curl|wget|bash -c|sh -c|chmod|sudo|eval|npx|nc|base64 -d)\s/m;
+  /```(?:sh|bash|zsh|shell|console)\b|^\s*\$ \S|\b(?:curl|wget|bash -c|sh -c|chmod|sudo|eval|npx|nc|base64 -d)\s|\bgit push (?:--force|-f)\b|--no-verify\b|\brm -rf\s/m;
+
+/** Task content that downloads and runs code or calls a shell from a script. */
+const TASK_RUNS_CODE =
+  /\b(?:curl|wget)\b[^\n]*\|\s*(?:ba|z|da)?sh\b|\b(?:curl|wget|nc|ncat)\s+-|\bbase64\s+(?:-d|--decode)\b|\bos\.system\s*\(|\bsubprocess\.|\bchild_process\b|\bexecSync\s*\(|\beval\s*\(/;
+const TASK_URL = /\b(?:https?|ftp):\/\/[^\s"')>\]]+/i;
+
+/**
+ * What makes task-runner content risky beyond running when someone asks for
+ * the task: "runs code" (download-and-run or shell calls), "url", or null.
+ */
+export function taskContentRisk(content: string): 'runs code' | 'url' | null {
+  if (TASK_RUNS_CODE.test(content)) return 'runs code';
+  if (TASK_URL.test(content)) return 'url';
+  return null;
+}
 const URL_IN_NOTE = /\b(?:https?|ftp):\/\/[^\s)>\]]+/i;
 
 /** Content-only concerns about a memory note: shell commands or URLs aimed at a later session. */

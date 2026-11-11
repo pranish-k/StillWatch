@@ -459,6 +459,39 @@ An `alpha` tag would make every command need `stillwatch@alpha`.
 
 **Cost:** Once `0.1.0` ships, prereleases must move to their own tag.
 
+### ADR-032: A detection benchmark with a held-out set
+
+**Decision:** The lab gains a second suite, `stillwatch lab --benchmark`, with attack scenarios adapted from MITRE ATT&CK techniques and published agent attack research, plus normal sessions.
+Each attack names its source and the rules that count as detecting it, and counts only when one of them fires at medium or high.
+Misses are reported, not failed, so the suite measures detection instead of gating it.
+Scenarios are split into a tuning set, which detectors may be improved against, and a held-out set written afterwards that is never tuned on.
+The core lab stays a must-pass regression suite.
+
+**Why:** A lab that only contains attacks the rules were written for always scores 100% and says nothing about unseen attacks.
+The held-out score is the honest estimate, and the gap between the two sets shows how much tuning inflated the other number.
+
+**Alternatives:** Counting any alert as a detection would credit a finding about something other than the attack.
+Running the benchmark in CI as a gate would push toward tuning on every scenario, which destroys the held-out set.
+
+**Cost:** Once a held-out scenario is used to change a detector, it must move to the tuning set and a fresh held-out scenario must replace it.
+
+### ADR-033: Severity follows evidence the user asked for it, and content
+
+**Decision:** A finding drops below medium only on precise evidence: the user's prompt names the exact package or secret file (`package.new`, `secret.read`), or the change arrived through a git command that brings in other commits (pull, merge, rebase, am, cherry-pick) and shows up committed.
+Checkout, switch, reset, and stash do not lower a finding, because they can surface a file the agent planted some other way.
+Task runner changes are rated by their content: plain edits are low, a URL or unknown content is medium, and code that downloads or runs commands is high.
+A new rule, `safety.destructive`, reports destructive command signals that facts already extracted but no rule used.
+A new signal, `background_process`, records processes detached with `nohup`, `setsid`, or `disown`.
+
+**Why:** The benchmark's baseline showed a 45% false alarm rate on ordinary sessions, mostly requested installs, edits to non-lifecycle scripts, and teammates' commits arriving through `git pull`.
+The broad Phase 1 scope keywords are fine for lowering high to medium but too loose to lower anything to low: "add an HTTP server" would excuse a typosquat.
+
+**Alternatives:** Lowering every keyword-matched finding to low would hide typosquats and unrequested persistence.
+Leaving destructive signals unreported keeps force pushes and history wiping invisible.
+
+**Cost:** A prompt-injected agent whose user happened to name `.env` gets a low `secret.read`; `secret.exfiltration` still fires on any send.
+Stored analyses are recomputed (`ANALYSIS_VERSION` 2, `FACTS_VERSION` 2).
+
 ## Decisions to make later
 
 | Topic | Revisit when |

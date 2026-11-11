@@ -72,3 +72,24 @@ export function matchScope(
   }
   return null;
 }
+
+/**
+ * True when a user request at or before `upTo` names `name` exactly, as a
+ * whole word (case-insensitive). Stricter than the keyword check: it is used
+ * to lower a finding below medium, so a generic word like "add" never counts.
+ */
+export function requestNames(
+  requests: readonly UserRequest[],
+  upTo: number,
+  name: string,
+): boolean {
+  const trimmed = name.trim();
+  if (trimmed.length < 2) return false;
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(?:^|[^A-Za-z0-9_@/-])${escaped}(?![A-Za-z0-9_-])`, 'i');
+  for (const request of requests) {
+    if (request.ts > upTo) break;
+    if (re.test(request.text)) return true;
+  }
+  return false;
+}

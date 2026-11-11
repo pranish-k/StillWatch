@@ -159,6 +159,34 @@ const SHELL_PROFILES = [
   '.kshrc',
 ];
 
+/** Commands people run constantly; a copy earlier in PATH sees every use. */
+const SHADOWED_COMMANDS = [
+  'git',
+  'ssh',
+  'scp',
+  'sudo',
+  'su',
+  'node',
+  'npm',
+  'npx',
+  'pnpm',
+  'yarn',
+  'python',
+  'python3',
+  'pip',
+  'pip3',
+  'ls',
+  'cat',
+  'curl',
+  'gpg',
+  'docker',
+  'kubectl',
+  'aws',
+  'gh',
+  'claude',
+  'make',
+];
+
 /** Catalog in order of specificity: the first match supplies the label. */
 const CATALOG: Entry[] = [
   // Stillwatch's own data.
@@ -229,6 +257,33 @@ const CATALOG: Entry[] = [
   e('secret', 'Java keystore', named('*.jks', '*.keystore')),
   e('secret', 'Terraform state', named('*.tfstate', '*.tfstate.backup')),
   e('secret', 'credentials file', named('credentials.json')),
+  e(
+    'secret',
+    'browser cookies or saved passwords',
+    all(
+      named(
+        'cookies',
+        'cookies.sqlite',
+        'login data',
+        'login data for account',
+        'web data',
+        'logins.json',
+        'key4.db',
+        'key3.db',
+      ),
+      any(
+        within('google', 'chrome'),
+        within('google-chrome'),
+        within('chromium'),
+        within('bravesoftware'),
+        within('microsoft edge'),
+        within('microsoft-edge'),
+        within('firefox'),
+        within('.mozilla'),
+        within('arc', 'user data'),
+      ),
+    ),
+  ),
   e('secret', 'service account key', named('service-account*.json')),
 
   // Git hooks and config.
@@ -329,6 +384,11 @@ const CATALOG: Entry[] = [
   e('startup_file', 'Python startup hook', named('sitecustomize.py', 'usercustomize.py')),
   e(
     'startup_file',
+    'program shadowing a system command',
+    all(any(homeIn('.local/bin'), homeIn('bin')), named(...SHADOWED_COMMANDS)),
+  ),
+  e(
+    'startup_file',
     'Python path file',
     all(named('*.pth'), any(within('site-packages'), within('dist-packages'))),
   ),
@@ -394,6 +454,18 @@ const CATALOG: Entry[] = [
   e('task_runner', 'Cargo build script', named('build.rs')),
   e('task_runner', 'Cargo config', any(tail('.cargo', 'config.toml'), tail('.cargo', 'config'))),
   e('task_runner', 'tox config', named('tox.ini')),
+  e('task_runner', 'pytest conftest', named('conftest.py')),
+  e(
+    'task_runner',
+    'Python package index config',
+    any(
+      home('.config/pip/pip.conf'),
+      home('.pip/pip.conf'),
+      named('pip.ini'),
+      home('.config/uv/uv.toml'),
+      named('uv.toml'),
+    ),
+  ),
   e('task_runner', 'nox sessions', named('noxfile.py')),
   e(
     'package_manifest',

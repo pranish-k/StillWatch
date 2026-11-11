@@ -3,7 +3,7 @@
  * CI, task runners, schedulers, and startup files.
  */
 import { baseName, type CommandFact, type StoredEvent } from '@stillwatch/schema';
-import { autoRunReason, gitConfigRisk, RISKY_GIT_CONFIG_KEY } from '../content';
+import { autoRunReason, gitConfigRisk, RISKY_GIT_CONFIG_KEY, taskContentRisk } from '../content';
 import type { RuleContext } from '../context';
 import type { FindingDraft, RuleFn } from '../findings';
 import {
@@ -121,15 +121,31 @@ export const taskRunner: RuleFn = (ctx) => {
     ) {
       continue;
     }
-    const why = autoRunReason(c.path, contentOf(c));
+    const content = contentOf(c);
+    const why = autoRunReason(c.path, content);
+    // Known content decides the level: code that downloads or shells out is high, a URL is
+    // medium, and a plain edit is low. Content Stillwatch could not see stays medium.
+    const risk = why === null && content !== null ? taskContentRisk(content) : null;
+    const severity =
+      why !== null || risk === 'runs code'
+        ? 'high'
+        : content === null || risk === 'url'
+          ? 'medium'
+          : 'low';
+    const detail =
+      risk === 'runs code'
+        ? ' The new content downloads or runs code.'
+        : risk === 'url'
+          ? ' The new content points at a URL.'
+          : '';
     out.push(
       changeDraft(ctx, c, {
         ruleId: 'persistence.task_runner',
-        severity: why === null ? 'medium' : 'high',
+        severity,
         title: why === null ? `Task runner ${verb(c)}` : 'Auto-running task added',
         reason:
           why === null
-            ? `${show(ctx, c.path)}${label(c.label)} was ${verb(c)}. Tasks defined there run when someone builds, tests, or installs.`
+            ? `${show(ctx, c.path)}${label(c.label)} was ${verb(c)}. Tasks defined there run when someone builds, tests, or installs.${detail}`
             : `${show(ctx, c.path)} was ${verb(c)}, and ${why}.`,
       }),
     );

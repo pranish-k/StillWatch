@@ -41,6 +41,8 @@ const HOME_ITEMS: HomeItem[] = [
   { rel: '.config/git/config', kind: 'file', class: 'git_config' },
   { rel: '.config/git/attributes', kind: 'file', class: 'git_config' },
   { rel: '.npmrc', kind: 'file', class: 'secret' },
+  { rel: '.config/pip/pip.conf', kind: 'file', class: 'task_runner' },
+  { rel: '.pip/pip.conf', kind: 'file', class: 'task_runner' },
   { rel: '.claude/settings.json', kind: 'file', class: 'agent_config' },
   { rel: '.claude/settings.local.json', kind: 'file', class: 'agent_config' },
   { rel: '.claude/agents', kind: 'dir', class: 'agent_config' },

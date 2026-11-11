@@ -16,6 +16,7 @@ import {
   type StoredEvent,
 } from '@stillwatch/schema';
 import type { AccessRecord, PathChange, RuleContext, SnapshotChange } from './context';
+import { isGitHistoryCommand } from './rules/common';
 import { createdFile, pushUnique } from './text';
 
 const WRITE_OPS = new Set(['write', 'delete', 'chmod']);
@@ -43,8 +44,12 @@ export function snapshottedRoots(input: AnalysisInput): string[] {
   return roots;
 }
 
-/** Commands that change some file classes as a side effect, without naming the file. */
-type Explainers = Partial<Record<PathClass, StoredEvent[]>>;
+/**
+ * Commands that change some file classes as a side effect, without naming the
+ * file. `history` holds git commands that move the working tree to existing
+ * commits (pull, merge, checkout), which can change any file in the repository.
+ */
+type Explainers = Partial<Record<PathClass, StoredEvent[]>> & { history?: StoredEvent[] };
 
 function collectExplainers(counted: RuleContext['counted']): Explainers {
   const out: Explainers = {};
@@ -59,6 +64,10 @@ function collectExplainers(counted: RuleContext['counted']): Explainers {
       if (s.kind === 'scheduled_task' && s.source === 'tool.input') add('scheduled_task', event);
     }
     for (const c of event.facts.commands) {
+      if (isGitHistoryCommand(c.program, c.args)) {
+        const list = (out.history ??= []);
+        if (!list.includes(event)) list.push(event);
+      }
       const sub = c.args.find((a) => !a.startsWith('-'));
       if (c.program === 'git' && sub !== undefined && GIT_CONFIG_SUBCOMMANDS.has(sub)) {
         add('git_config', event);
@@ -83,6 +92,13 @@ function implied(change: PathChange, explainers: Explainers): StoredEvent[] {
           cwd !== null && (isWithin(change.path, cwd) || (repo !== null && isWithin(cwd, repo)));
         if (!near) continue;
       }
+      if (!out.includes(event)) out.push(event);
+    }
+  }
+  if (out.length === 0 && change.diff !== null) {
+    for (const event of explainers.history ?? []) {
+      const cwd = event.cwd;
+      if (cwd === null || !isWithin(cwd, change.diff.repoRoot)) continue;
       if (!out.includes(event)) out.push(event);
     }
   }

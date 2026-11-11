@@ -453,6 +453,12 @@ const wgetHandler: Handler = (v, emit, home) => {
 
 const gitHandler: Handler = (v, emit, home) => {
   const git = gitParts(v, home);
+  if (git.sub === 'add') {
+    // Staging a file reads it into the repository; with --force even an ignored one.
+    const items = parseArgs(git.args, { long: ['--chmod', '--pathspec-from-file'] });
+    for (const w of operandsOf(items)) emit(w, 'read', 'git add', git.cwd);
+    return;
+  }
   if (git.sub === 'clone') {
     const items = parseArgs(git.args, {
       short: 'bcjou',
@@ -623,6 +629,24 @@ const base64Handler: Handler = (v, emit) => {
   for (const w of operandsOf(items)) emit(w, 'read', 'base64');
 };
 
+/** gh commands that upload local files: gist create and edit, release upload and create. */
+const ghHandler: Handler = (v, emit) => {
+  const items = parseArgs(v.args, {
+    short: 'dfRnt',
+    long: ['--desc', '--filename', '--repo', '--notes', '--notes-file', '--title', '--target'],
+  });
+  const [group, sub, ...rest] = operandsOf(items);
+  const upload =
+    (group?.value === 'gist' &&
+      (sub?.value === 'create' || sub?.value === 'new' || sub?.value === 'edit')) ||
+    (group?.value === 'release' && (sub?.value === 'upload' || sub?.value === 'create'));
+  if (!upload) return;
+  // release upload and create take the tag first.
+  const files = group.value === 'release' ? rest.slice(1) : rest;
+  const label = `gh ${group.value} ${sub.value}`;
+  for (const w of files) emit(w, 'read', label);
+};
+
 const sourceHandler: Handler = (v, emit) => {
   emit(v.args[0], 'read', 'source');
 };
@@ -732,6 +756,7 @@ const HANDLERS = new Map<string, Handler>([
   ['curl', curlHandler],
   ['wget', wgetHandler],
   ['git', gitHandler],
+  ['gh', ghHandler],
   ['rm', allOperands('delete', {}, 'rm')],
   ['rmdir', allOperands('delete', {}, 'rmdir')],
   ['unlink', allOperands('delete', {}, 'unlink')],
